@@ -1,7 +1,7 @@
 # ============================================================
-#   PitCode - Analizador Sintáctico (Versión Mejorada)
+#   PitCode - Analizador Sintáctico
 #   Compiladores 2026 - Fase I
-#   Basado en ANSI C Yacc Grammar (adaptado a PitCode)
+#   Basado en ANSI C Yacc Grammar 
 # ============================================================
 
 import ply.yacc as yacc
