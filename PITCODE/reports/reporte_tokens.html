@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>PitCode - Reporte de Tokens</title>
+  
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0f0f0f;
+    color: #e0e0e0;
+    padding: 30px;
+  }
+  h1 {
+    font-size: 2rem;
+    color: #e10600;
+    border-bottom: 3px solid #e10600;
+    padding-bottom: 10px;
+    margin-bottom: 25px;
+    letter-spacing: 2px;
+  }
+  h2 {
+    font-size: 1.2rem;
+    color: #ff8c00;
+    margin: 30px 0 12px;
+    letter-spacing: 1px;
+  }
+  .badge {
+    display: inline-block;
+    background: #e10600;
+    color: white;
+    border-radius: 4px;
+    padding: 2px 10px;
+    font-size: 0.8rem;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .badge.ok  { background: #2e7d32; }
+  .badge.warn { background: #ff8c00; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+  }
+  th {
+    background: #e10600;
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    letter-spacing: 1px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+  }
+  td {
+    padding: 8px 14px;
+    border-bottom: 1px solid #2a2a2a;
+  }
+  tr:nth-child(even) td { background: #1a1a1a; }
+  tr:hover td { background: #222; }
+  .tag-token  { color: #4fc3f7; font-weight: bold; }
+  .tag-lexeme { color: #a5d6a7; font-family: monospace; }
+  .tag-type   { color: #ce93d8; }
+  .tag-role   { color: #ffcc80; }
+  .tag-scope  { color: #80deea; }
+  .tag-error  { color: #ef9a9a; font-weight: bold; }
+  .tag-line   { color: #888; font-family: monospace; }
+  .no-errors {
+    background: #1b3a1f;
+    border: 1px solid #2e7d32;
+    border-radius: 6px;
+    padding: 16px 20px;
+    color: #a5d6a7;
+    font-size: 1rem;
+  }
+  .summary {
+    background: #1a1a1a;
+    border-left: 4px solid #e10600;
+    padding: 12px 18px;
+    margin-bottom: 20px;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.9rem;
+    color: #bbb;
+  }
+  footer {
+    margin-top: 40px;
+    color: #444;
+    font-size: 0.8rem;
+    text-align: center;
+  }
+</style>
+
+</head>
+<body>
+  <h1>🏎 PitCode — Reporte de Tokens</h1>
+  <div class="summary">
+    Archivo analizado: <strong>prueba.pitcode</strong> &nbsp;|&nbsp;
+    Tokens encontrados: <strong>144</strong> &nbsp;|&nbsp;
+    Errores léxicos: <strong>0</strong>
+  </div>
+
+  <h2>Tokens y Lexemas <span class="badge ok">144</span></h2>
+  <table>
+    <thead>
+      <tr><th>Token</th><th>Lexema</th><th>Línea</th><th>Columna</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td class="tag-token">STRATEGY</td>
+          <td class="tag-lexeme">strategy</td>
+          <td class="tag-line">3</td>
+          <td class="tag-line">1</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LAP</td>
+          <td class="tag-lexeme">lap</td>
+          <td class="tag-line">3</td>
+          <td class="tag-line">10</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">calcular_gap</td>
+          <td class="tag-line">3</td>
+          <td class="tag-line">14</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LPAREN</td>
+          <td class="tag-lexeme">(</td>
+          <td class="tag-line">3</td>
+          <td class="tag-line">26</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LAP</td>
+          <td class="tag-lexeme">lap</td>
+          <td class="tag-line">3</td>
+          <td class="tag-line">27</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">a</td>
+          <td class="tag-line">3</td>
+          <td class="tag-line">31</td>
+        </tr>
+        <tr>
+          <td class="tag-token">COMMA</td>
+          <td class="tag-lexeme">,</td>
+          <td class="tag-line">3</td>
+          <td class="tag-line">32</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LAP</td>
+          <td class="tag-lexeme">lap</td>
+          <td class="tag-line">3</td>
+          <td class="tag-line">34</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">b</td>
+          <td class="tag-line">3</td>
+          <td class="tag-line">38</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RPAREN</td>
+          <td class="tag-lexeme">)</td>
+          <td class="tag-line">3</td>
+          <td class="tag-line">39</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LBRACE</td>
+          <td class="tag-lexeme">{</td>
+          <td class="tag-line">3</td>
+          <td class="tag-line">41</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LAP</td>
+          <td class="tag-lexeme">lap</td>
+          <td class="tag-line">4</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">diferencia</td>
+          <td class="tag-line">4</td>
+          <td class="tag-line">9</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ASSIGN</td>
+          <td class="tag-lexeme">=</td>
+          <td class="tag-line">4</td>
+          <td class="tag-line">20</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">a</td>
+          <td class="tag-line">4</td>
+          <td class="tag-line">22</td>
+        </tr>
+        <tr>
+          <td class="tag-token">GAP</td>
+          <td class="tag-lexeme">Gap</td>
+          <td class="tag-line">4</td>
+          <td class="tag-line">24</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">b</td>
+          <td class="tag-line">4</td>
+          <td class="tag-line">28</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">4</td>
+          <td class="tag-line">29</td>
+        </tr>
+        <tr>
+          <td class="tag-token">PODIO</td>
+          <td class="tag-lexeme">podio</td>
+          <td class="tag-line">5</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">diferencia</td>
+          <td class="tag-line">5</td>
+          <td class="tag-line">11</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">5</td>
+          <td class="tag-line">21</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RBRACE</td>
+          <td class="tag-lexeme">}</td>
+          <td class="tag-line">6</td>
+          <td class="tag-line">1</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RACE_START</td>
+          <td class="tag-lexeme">race_start</td>
+          <td class="tag-line">8</td>
+          <td class="tag-line">1</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LBRACE</td>
+          <td class="tag-lexeme">{</td>
+          <td class="tag-line">8</td>
+          <td class="tag-line">12</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LAP</td>
+          <td class="tag-lexeme">lap</td>
+          <td class="tag-line">9</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">vueltas</td>
+          <td class="tag-line">9</td>
+          <td class="tag-line">9</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ASSIGN</td>
+          <td class="tag-lexeme">=</td>
+          <td class="tag-line">9</td>
+          <td class="tag-line">17</td>
+        </tr>
+        <tr>
+          <td class="tag-token">INT_LITERAL</td>
+          <td class="tag-lexeme">5</td>
+          <td class="tag-line">9</td>
+          <td class="tag-line">19</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">9</td>
+          <td class="tag-line">20</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SPLIT</td>
+          <td class="tag-lexeme">split</td>
+          <td class="tag-line">10</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">tiempo</td>
+          <td class="tag-line">10</td>
+          <td class="tag-line">11</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ASSIGN</td>
+          <td class="tag-lexeme">=</td>
+          <td class="tag-line">10</td>
+          <td class="tag-line">18</td>
+        </tr>
+        <tr>
+          <td class="tag-token">FLOAT_LITERAL</td>
+          <td class="tag-lexeme">0.0</td>
+          <td class="tag-line">10</td>
+          <td class="tag-line">20</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">10</td>
+          <td class="tag-line">23</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RADIO</td>
+          <td class="tag-lexeme">radio</td>
+          <td class="tag-line">11</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">piloto</td>
+          <td class="tag-line">11</td>
+          <td class="tag-line">11</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ASSIGN</td>
+          <td class="tag-lexeme">=</td>
+          <td class="tag-line">11</td>
+          <td class="tag-line">18</td>
+        </tr>
+        <tr>
+          <td class="tag-token">STRING_LITERAL</td>
+          <td class="tag-lexeme">Max Verstappen</td>
+          <td class="tag-line">11</td>
+          <td class="tag-line">20</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">11</td>
+          <td class="tag-line">36</td>
+        </tr>
+        <tr>
+          <td class="tag-token">YELLOW_FLAG</td>
+          <td class="tag-lexeme">yellow_flag</td>
+          <td class="tag-line">12</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">activo</td>
+          <td class="tag-line">12</td>
+          <td class="tag-line">17</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ASSIGN</td>
+          <td class="tag-lexeme">=</td>
+          <td class="tag-line">12</td>
+          <td class="tag-line">24</td>
+        </tr>
+        <tr>
+          <td class="tag-token">TRUE</td>
+          <td class="tag-lexeme">true</td>
+          <td class="tag-line">12</td>
+          <td class="tag-line">26</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">12</td>
+          <td class="tag-line">30</td>
+        </tr>
+        <tr>
+          <td class="tag-token">FORMATION_LAP</td>
+          <td class="tag-lexeme">formation_lap</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LPAREN</td>
+          <td class="tag-lexeme">(</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">19</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LAP</td>
+          <td class="tag-lexeme">lap</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">20</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">i</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">24</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ASSIGN</td>
+          <td class="tag-lexeme">=</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">26</td>
+        </tr>
+        <tr>
+          <td class="tag-token">INT_LITERAL</td>
+          <td class="tag-lexeme">0</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">28</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">29</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">i</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">31</td>
+        </tr>
+        <tr>
+          <td class="tag-token">UNDERCUT</td>
+          <td class="tag-lexeme">UNDERCUT</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">33</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">vueltas</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">42</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">49</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">i</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">51</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ASSIGN</td>
+          <td class="tag-lexeme">=</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">53</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">i</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">55</td>
+        </tr>
+        <tr>
+          <td class="tag-token">TOW</td>
+          <td class="tag-lexeme">Tow</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">57</td>
+        </tr>
+        <tr>
+          <td class="tag-token">INT_LITERAL</td>
+          <td class="tag-lexeme">1</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">61</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RPAREN</td>
+          <td class="tag-lexeme">)</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">62</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LBRACE</td>
+          <td class="tag-lexeme">{</td>
+          <td class="tag-line">14</td>
+          <td class="tag-line">64</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">tiempo</td>
+          <td class="tag-line">15</td>
+          <td class="tag-line">9</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ASSIGN</td>
+          <td class="tag-lexeme">=</td>
+          <td class="tag-line">15</td>
+          <td class="tag-line">16</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">tiempo</td>
+          <td class="tag-line">15</td>
+          <td class="tag-line">18</td>
+        </tr>
+        <tr>
+          <td class="tag-token">TOW</td>
+          <td class="tag-lexeme">Tow</td>
+          <td class="tag-line">15</td>
+          <td class="tag-line">25</td>
+        </tr>
+        <tr>
+          <td class="tag-token">FLOAT_LITERAL</td>
+          <td class="tag-lexeme">71.3</td>
+          <td class="tag-line">15</td>
+          <td class="tag-line">29</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">15</td>
+          <td class="tag-line">33</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RBRACE</td>
+          <td class="tag-lexeme">}</td>
+          <td class="tag-line">16</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">STRATEGY_CHECK</td>
+          <td class="tag-lexeme">strategy_check</td>
+          <td class="tag-line">18</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LPAREN</td>
+          <td class="tag-lexeme">(</td>
+          <td class="tag-line">18</td>
+          <td class="tag-line">20</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">tiempo</td>
+          <td class="tag-line">18</td>
+          <td class="tag-line">21</td>
+        </tr>
+        <tr>
+          <td class="tag-token">UNDERCUT</td>
+          <td class="tag-lexeme">UNDERCUT</td>
+          <td class="tag-line">18</td>
+          <td class="tag-line">28</td>
+        </tr>
+        <tr>
+          <td class="tag-token">FLOAT_LITERAL</td>
+          <td class="tag-lexeme">350.0</td>
+          <td class="tag-line">18</td>
+          <td class="tag-line">37</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RPAREN</td>
+          <td class="tag-lexeme">)</td>
+          <td class="tag-line">18</td>
+          <td class="tag-line">42</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LBRACE</td>
+          <td class="tag-lexeme">{</td>
+          <td class="tag-line">18</td>
+          <td class="tag-line">44</td>
+        </tr>
+        <tr>
+          <td class="tag-token">BROADCAST</td>
+          <td class="tag-lexeme">broadcast</td>
+          <td class="tag-line">19</td>
+          <td class="tag-line">9</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LPAREN</td>
+          <td class="tag-lexeme">(</td>
+          <td class="tag-line">19</td>
+          <td class="tag-line">18</td>
+        </tr>
+        <tr>
+          <td class="tag-token">STRING_LITERAL</td>
+          <td class="tag-lexeme">Tiempo excelente</td>
+          <td class="tag-line">19</td>
+          <td class="tag-line">19</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RPAREN</td>
+          <td class="tag-lexeme">)</td>
+          <td class="tag-line">19</td>
+          <td class="tag-line">37</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">19</td>
+          <td class="tag-line">38</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RBRACE</td>
+          <td class="tag-lexeme">}</td>
+          <td class="tag-line">20</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">STAY_OUT</td>
+          <td class="tag-lexeme">stay_out</td>
+          <td class="tag-line">20</td>
+          <td class="tag-line">7</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LBRACE</td>
+          <td class="tag-lexeme">{</td>
+          <td class="tag-line">20</td>
+          <td class="tag-line">16</td>
+        </tr>
+        <tr>
+          <td class="tag-token">BROADCAST</td>
+          <td class="tag-lexeme">broadcast</td>
+          <td class="tag-line">21</td>
+          <td class="tag-line">9</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LPAREN</td>
+          <td class="tag-lexeme">(</td>
+          <td class="tag-line">21</td>
+          <td class="tag-line">18</td>
+        </tr>
+        <tr>
+          <td class="tag-token">STRING_LITERAL</td>
+          <td class="tag-lexeme">Conservar neumaticos</td>
+          <td class="tag-line">21</td>
+          <td class="tag-line">19</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RPAREN</td>
+          <td class="tag-lexeme">)</td>
+          <td class="tag-line">21</td>
+          <td class="tag-line">41</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">21</td>
+          <td class="tag-line">42</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RBRACE</td>
+          <td class="tag-lexeme">}</td>
+          <td class="tag-line">22</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">PUSH</td>
+          <td class="tag-lexeme">push</td>
+          <td class="tag-line">24</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LPAREN</td>
+          <td class="tag-lexeme">(</td>
+          <td class="tag-line">24</td>
+          <td class="tag-line">10</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">activo</td>
+          <td class="tag-line">24</td>
+          <td class="tag-line">11</td>
+        </tr>
+        <tr>
+          <td class="tag-token">DEAD_HEAT</td>
+          <td class="tag-lexeme">DEAD_HEAT</td>
+          <td class="tag-line">24</td>
+          <td class="tag-line">18</td>
+        </tr>
+        <tr>
+          <td class="tag-token">TRUE</td>
+          <td class="tag-lexeme">true</td>
+          <td class="tag-line">24</td>
+          <td class="tag-line">28</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RPAREN</td>
+          <td class="tag-lexeme">)</td>
+          <td class="tag-line">24</td>
+          <td class="tag-line">32</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LBRACE</td>
+          <td class="tag-lexeme">{</td>
+          <td class="tag-line">24</td>
+          <td class="tag-line">34</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LAP</td>
+          <td class="tag-lexeme">lap</td>
+          <td class="tag-line">25</td>
+          <td class="tag-line">9</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">fuel</td>
+          <td class="tag-line">25</td>
+          <td class="tag-line">13</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ASSIGN</td>
+          <td class="tag-lexeme">=</td>
+          <td class="tag-line">25</td>
+          <td class="tag-line">18</td>
+        </tr>
+        <tr>
+          <td class="tag-token">INT_LITERAL</td>
+          <td class="tag-lexeme">80</td>
+          <td class="tag-line">25</td>
+          <td class="tag-line">20</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">25</td>
+          <td class="tag-line">22</td>
+        </tr>
+        <tr>
+          <td class="tag-token">STRATEGY_CHECK</td>
+          <td class="tag-lexeme">strategy_check</td>
+          <td class="tag-line">26</td>
+          <td class="tag-line">9</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LPAREN</td>
+          <td class="tag-lexeme">(</td>
+          <td class="tag-line">26</td>
+          <td class="tag-line">24</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">fuel</td>
+          <td class="tag-line">26</td>
+          <td class="tag-line">25</td>
+        </tr>
+        <tr>
+          <td class="tag-token">UNDERCUT</td>
+          <td class="tag-lexeme">UNDERCUT</td>
+          <td class="tag-line">26</td>
+          <td class="tag-line">30</td>
+        </tr>
+        <tr>
+          <td class="tag-token">INT_LITERAL</td>
+          <td class="tag-lexeme">20</td>
+          <td class="tag-line">26</td>
+          <td class="tag-line">39</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RPAREN</td>
+          <td class="tag-lexeme">)</td>
+          <td class="tag-line">26</td>
+          <td class="tag-line">41</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LBRACE</td>
+          <td class="tag-lexeme">{</td>
+          <td class="tag-line">26</td>
+          <td class="tag-line">43</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">activo</td>
+          <td class="tag-line">27</td>
+          <td class="tag-line">13</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ASSIGN</td>
+          <td class="tag-lexeme">=</td>
+          <td class="tag-line">27</td>
+          <td class="tag-line">20</td>
+        </tr>
+        <tr>
+          <td class="tag-token">FALSE</td>
+          <td class="tag-lexeme">false</td>
+          <td class="tag-line">27</td>
+          <td class="tag-line">22</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">27</td>
+          <td class="tag-line">27</td>
+        </tr>
+        <tr>
+          <td class="tag-token">BOX_BOX</td>
+          <td class="tag-lexeme">box_box</td>
+          <td class="tag-line">28</td>
+          <td class="tag-line">13</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">28</td>
+          <td class="tag-line">20</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RBRACE</td>
+          <td class="tag-lexeme">}</td>
+          <td class="tag-line">29</td>
+          <td class="tag-line">9</td>
+        </tr>
+        <tr>
+          <td class="tag-token">STAY_OUT</td>
+          <td class="tag-lexeme">stay_out</td>
+          <td class="tag-line">29</td>
+          <td class="tag-line">11</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LBRACE</td>
+          <td class="tag-lexeme">{</td>
+          <td class="tag-line">29</td>
+          <td class="tag-line">20</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">fuel</td>
+          <td class="tag-line">30</td>
+          <td class="tag-line">13</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ASSIGN</td>
+          <td class="tag-lexeme">=</td>
+          <td class="tag-line">30</td>
+          <td class="tag-line">18</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">fuel</td>
+          <td class="tag-line">30</td>
+          <td class="tag-line">20</td>
+        </tr>
+        <tr>
+          <td class="tag-token">GAP</td>
+          <td class="tag-lexeme">Gap</td>
+          <td class="tag-line">30</td>
+          <td class="tag-line">25</td>
+        </tr>
+        <tr>
+          <td class="tag-token">INT_LITERAL</td>
+          <td class="tag-lexeme">5</td>
+          <td class="tag-line">30</td>
+          <td class="tag-line">29</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">30</td>
+          <td class="tag-line">30</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RBRACE</td>
+          <td class="tag-lexeme">}</td>
+          <td class="tag-line">31</td>
+          <td class="tag-line">9</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RBRACE</td>
+          <td class="tag-lexeme">}</td>
+          <td class="tag-line">32</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LAP</td>
+          <td class="tag-lexeme">lap</td>
+          <td class="tag-line">34</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">resultado</td>
+          <td class="tag-line">34</td>
+          <td class="tag-line">9</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ASSIGN</td>
+          <td class="tag-lexeme">=</td>
+          <td class="tag-line">34</td>
+          <td class="tag-line">19</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">calcular_gap</td>
+          <td class="tag-line">34</td>
+          <td class="tag-line">21</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LPAREN</td>
+          <td class="tag-lexeme">(</td>
+          <td class="tag-line">34</td>
+          <td class="tag-line">33</td>
+        </tr>
+        <tr>
+          <td class="tag-token">INT_LITERAL</td>
+          <td class="tag-lexeme">120</td>
+          <td class="tag-line">34</td>
+          <td class="tag-line">34</td>
+        </tr>
+        <tr>
+          <td class="tag-token">COMMA</td>
+          <td class="tag-lexeme">,</td>
+          <td class="tag-line">34</td>
+          <td class="tag-line">37</td>
+        </tr>
+        <tr>
+          <td class="tag-token">INT_LITERAL</td>
+          <td class="tag-lexeme">115</td>
+          <td class="tag-line">34</td>
+          <td class="tag-line">39</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RPAREN</td>
+          <td class="tag-lexeme">)</td>
+          <td class="tag-line">34</td>
+          <td class="tag-line">42</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">34</td>
+          <td class="tag-line">43</td>
+        </tr>
+        <tr>
+          <td class="tag-token">BROADCAST</td>
+          <td class="tag-lexeme">broadcast</td>
+          <td class="tag-line">35</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">LPAREN</td>
+          <td class="tag-lexeme">(</td>
+          <td class="tag-line">35</td>
+          <td class="tag-line">14</td>
+        </tr>
+        <tr>
+          <td class="tag-token">ID</td>
+          <td class="tag-lexeme">resultado</td>
+          <td class="tag-line">35</td>
+          <td class="tag-line">15</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RPAREN</td>
+          <td class="tag-lexeme">)</td>
+          <td class="tag-line">35</td>
+          <td class="tag-line">24</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">35</td>
+          <td class="tag-line">25</td>
+        </tr>
+        <tr>
+          <td class="tag-token">CHECKERED_FLAG</td>
+          <td class="tag-lexeme">checkered_flag</td>
+          <td class="tag-line">36</td>
+          <td class="tag-line">5</td>
+        </tr>
+        <tr>
+          <td class="tag-token">SEMICOLON</td>
+          <td class="tag-lexeme">;</td>
+          <td class="tag-line">36</td>
+          <td class="tag-line">19</td>
+        </tr>
+        <tr>
+          <td class="tag-token">RBRACE</td>
+          <td class="tag-lexeme">}</td>
+          <td class="tag-line">37</td>
+          <td class="tag-line">1</td>
+        </tr></tbody>
+  </table>
+
+  
+        <h2>Errores Léxicos <span class="badge ok">0</span></h2>
+        <div class="no-errors">✓ No se encontraron errores léxicos.</div>
+
+  <footer>PitCode Compiler · Compiladores 2026 · Fase I</footer>
+</body>
+</html>
