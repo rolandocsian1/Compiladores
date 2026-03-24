@@ -1,7 +1,7 @@
 # ============================================================
-#   PitCode - Analizador Sintáctico
+#   PitCode - Analizador Sintáctico (Versión Mejorada)
 #   Compiladores 2026 - Fase I
-#   Basado en ANSI C Yacc Grammar 
+#   Basado en ANSI C Yacc Grammar (adaptado a PitCode)
 # ============================================================
 
 import ply.yacc as yacc
@@ -83,19 +83,19 @@ def p_main_program_empty(p):
 
 def p_function_def_with_params(p):
     '''function_definition : STRATEGY type_specifier ID LPAREN parameter_list RPAREN compound_statement'''
-    p[0] = ('func_def', p[2], p[3], p[5], p[7])
+    p[0] = ('func_def', p[2], p[3], p[5], p[7], p.lineno(3), p.lexpos(3))
 
 def p_function_def_no_params(p):
     '''function_definition : STRATEGY type_specifier ID LPAREN RPAREN compound_statement'''
-    p[0] = ('func_def', p[2], p[3], [], p[6])
+    p[0] = ('func_def', p[2], p[3], [], p[6], p.lineno(3), p.lexpos(3))
 
 def p_function_def_void_with_params(p):
     '''function_definition : STRATEGY NEUTRO ID LPAREN parameter_list RPAREN compound_statement'''
-    p[0] = ('func_def', 'neutro', p[3], p[5], p[7])
+    p[0] = ('func_def', 'neutro', p[3], p[5], p[7], p.lineno(3), p.lexpos(3))
 
 def p_function_def_void_no_params(p):
     '''function_definition : STRATEGY NEUTRO ID LPAREN RPAREN compound_statement'''
-    p[0] = ('func_def', 'neutro', p[3], [], p[6])
+    p[0] = ('func_def', 'neutro', p[3], [], p[6], p.lineno(3), p.lexpos(3))
 
 # ─────────────────────────────────────────────
 #  PARÁMETROS
@@ -111,7 +111,7 @@ def p_parameter_list_multiple(p):
 
 def p_parameter_declaration(p):
     '''parameter_declaration : type_specifier ID'''
-    p[0] = ('param', p[1], p[2])
+    p[0] = ('param', p[1], p[2], p.lineno(2), p.lexpos(2))
 
 # ═══════════════════════════════════════════════════════════
 #  TIPOS DE DATOS
@@ -159,15 +159,15 @@ def p_block_item(p):
 
 def p_declaration_with_init(p):
     '''declaration : type_specifier ID ASSIGN expression SEMICOLON'''
-    p[0] = ('declare', p[1], p[2], p[4])
+    p[0] = ('declare', p[1], p[2], p[4], p.lineno(2), p.lexpos(2))
 
 def p_declaration_no_init(p):
     '''declaration : type_specifier ID SEMICOLON'''
-    p[0] = ('declare', p[1], p[2], None)
+    p[0] = ('declare', p[1], p[2], None, p.lineno(2), p.lexpos(2))
 
 def p_declaration_const(p):
     '''declaration : VSC type_specifier ID ASSIGN expression SEMICOLON'''
-    p[0] = ('declare_const', p[2], p[3], p[5])
+    p[0] = ('declare_const', p[2], p[3], p[5], p.lineno(3), p.lexpos(3))
 
 # ═══════════════════════════════════════════════════════════
 #  INSTRUCCIONES (statements)
@@ -253,7 +253,7 @@ def p_for_empty(p):
 
 def p_for_init_declare(p):
     '''for_init : type_specifier ID ASSIGN expression SEMICOLON'''
-    p[0] = ('declare', p[1], p[2], p[4])
+    p[0] = ('declare', p[1], p[2], p[4], p.lineno(2), p.lexpos(2))
 
 def p_for_init_expr(p):
     '''for_init : expression SEMICOLON'''
