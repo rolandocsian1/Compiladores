@@ -1,7 +1,7 @@
 # ============================================================
-#   PitCode - Analizador Léxico (Versión Mejorada)
+#   PitCode - Analizador Léxico 
 #   Compiladores 2026 - Fase I
-#   Lenguaje: PitCode (temática F1)
+#   Lenguaje: PitCode 
 # ============================================================
 
 import ply.lex as lex
