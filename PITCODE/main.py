@@ -1,5 +1,5 @@
 # ============================================================
-#   PitCode - Orquestador Principal
+#   PitCode
 #   Compiladores 2026 - Fase I
 #   Uso: python main.py [archivo.pitcode]
 # ============================================================
@@ -11,7 +11,6 @@ from parser import parse
 
 # ─────────────────────────────────────────────
 #  TABLA DE SÍMBOLOS
-#  Gestiona ámbitos: global / local por función
 # ─────────────────────────────────────────────
 
 class SymbolTable:
@@ -54,12 +53,18 @@ class SymbolTable:
         return self.all_symbols
 
 
-def build_symbol_table(ast):
+def build_symbol_table(ast, source_code=''):
     """Recorre el AST y construye la tabla de símbolos."""
     table = SymbolTable()
 
     if ast is None:
         return table
+
+    def lexpos_to_col(lexpos):
+        if not source_code or lexpos == 0:
+            return 0
+        line_start = source_code.rfind(chr(10), 0, lexpos) + 1
+        return (lexpos - line_start) + 1
 
     def walk(node):
         if not isinstance(node, tuple):
@@ -76,12 +81,21 @@ def build_symbol_table(ast):
                 walk(f)
 
         elif kind == 'func_def':
-            _, dtype, name, params, body = node
-            table.insert(name, dtype, 'función', 0, 0)
+            # node: (func_def, dtype, name, params, body, line, lexpos)
+            dtype  = node[1]
+            name   = node[2]
+            params = node[3]
+            body   = node[4]
+            line   = node[5] if len(node) > 5 else 0
+            lexpos = node[6] if len(node) > 6 else 0
+            table.insert(name, dtype, 'función', line, lexpos_to_col(lexpos))
             table.enter_scope(name)
             for p in params:
-                _, ptype, pname = p
-                table.insert(pname, ptype, 'parámetro', 0, 0)
+                ptype  = p[1]
+                pname  = p[2]
+                pline  = p[3] if len(p) > 3 else 0
+                plexpos= p[4] if len(p) > 4 else 0
+                table.insert(pname, ptype, 'parámetro', pline, lexpos_to_col(plexpos))
             walk(body)
             table.exit_scope()
 
@@ -91,8 +105,12 @@ def build_symbol_table(ast):
                 walk(item)
 
         elif kind in ('declare', 'declare_const'):
-            _, dtype, name, val = node
-            table.insert(name, dtype, 'variable', 0, 0)
+            dtype  = node[1]
+            name   = node[2]
+            val    = node[3]
+            line   = node[4] if len(node) > 4 else 0
+            lexpos = node[5] if len(node) > 5 else 0
+            table.insert(name, dtype, 'variable', line, lexpos_to_col(lexpos))
             if val:
                 walk(val)
 
@@ -241,18 +259,53 @@ HTML_STYLE = """
 """
 
 
+
+# Reserved words set for categorization
+RESERVED_WORDS = {
+    'LAP','SPLIT','PITBOARD','YELLOW_FLAG','RADIO',
+    'STRATEGY_CHECK','STAY_OUT','PUSH','BOX','FORMATION_LAP',
+    'GAP_CHECK','SECTOR','NO_DATA','BOX_BOX','DRS',
+    'STRATEGY','PODIO','NEUTRO','RACE_START',
+    'BROADCAST','TELEMETRY','UNDERCUT_KW','DNF','VSC',
+    'APEX','PADDOCK','RED_FLAG','BLUE_FLAG','BLACK_FLAG',
+    'CHECKERED_FLAG','TRUE','FALSE'
+}
+OPERATORS = {'TOW','GAP','ERS','STINT','FUEL_DELTA','DEAD_HEAT','OUTLAP','UNDERCUT','OVERCUT','BOTH_TYRES','EITHER_TYRE','REVERSE_GRID','ASSIGN'}
+LITERALS  = {'INT_LITERAL','FLOAT_LITERAL','STRING_LITERAL','CHAR_LITERAL'}
+DELIMITERS= {'SEMICOLON','LBRACE','RBRACE','LPAREN','RPAREN','COMMA','LBRACKET','RBRACKET','COLON'}
+
+def get_category(token_type):
+    if token_type in RESERVED_WORDS:  return ('Palabra Reservada', 'cat-reserved')
+    if token_type in OPERATORS:        return ('Operador',          'cat-operator')
+    if token_type in LITERALS:         return ('Literal',           'cat-literal')
+    if token_type in DELIMITERS:       return ('Delimitador',       'cat-delimiter')
+    if token_type == 'ID':             return ('Identificador',     'cat-id')
+    return ('Otro', 'cat-other')
+
 def generate_token_report(token_list, error_list, source_file, output_path):
-    """Reporte HTML de tokens y lexemas."""
+    """Reporte HTML de tokens y lexemas con categoría, filtros y estadísticas."""
+
+    # ── Estadísticas ──
+    from collections import Counter
+    cat_counts = Counter()
+    for t in token_list:
+        cat, _ = get_category(t['token'])
+        cat_counts[cat] += 1
+
+    # ── Filas de la tabla ──
     rows = ""
     for t in token_list:
+        cat_label, cat_class = get_category(t['token'])
         rows += f"""
-        <tr>
+        <tr data-cat="{cat_label}">
           <td class="tag-token">{t['token']}</td>
           <td class="tag-lexeme">{t['lexeme']}</td>
+          <td><span class="cat-badge {cat_class}">{cat_label}</span></td>
           <td class="tag-line">{t['line']}</td>
           <td class="tag-line">{t['column']}</td>
         </tr>"""
 
+    # ── Errores léxicos ──
     error_rows = ""
     if error_list:
         for e in error_list:
@@ -275,30 +328,149 @@ def generate_token_report(token_list, error_list, source_file, output_path):
         <h2>Errores Léxicos <span class="badge ok">0</span></h2>
         <div class="no-errors">✓ No se encontraron errores léxicos.</div>"""
 
+    # ── Tarjetas de estadísticas ──
+    stat_cards = ""
+    colors = {
+        'Palabra Reservada': '#e10600',
+        'Operador':          '#ff8c00',
+        'Literal':           '#4fc3f7',
+        'Identificador':     '#a5d6a7',
+        'Delimitador':       '#ce93d8',
+        'Otro':              '#888'
+    }
+    for cat, count in sorted(cat_counts.items()):
+        color = colors.get(cat, '#888')
+        stat_cards += f'<div class="stat-card" style="border-top:3px solid {color}"><div class="stat-num" style="color:{color}">{count}</div><div class="stat-label">{cat}</div></div>'
+
     html = f"""<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>PitCode - Reporte de Tokens</title>
   {HTML_STYLE}
+  <style>
+    .cat-badge {{
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }}
+    .cat-reserved  {{ background:#4a0000; color:#ff6b6b; }}
+    .cat-operator  {{ background:#4a2800; color:#ffb347; }}
+    .cat-literal   {{ background:#003a4a; color:#4fc3f7; }}
+    .cat-id        {{ background:#1a3a1a; color:#a5d6a7; }}
+    .cat-delimiter {{ background:#2a1a3a; color:#ce93d8; }}
+    .cat-other     {{ background:#2a2a2a; color:#888; }}
+    .filter-bar {{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }}
+    .filter-btn {{
+      padding: 6px 14px;
+      border-radius: 4px;
+      border: 1px solid #333;
+      background: #1a1a1a;
+      color: #ccc;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: all 0.2s;
+    }}
+    .filter-btn:hover, .filter-btn.active {{
+      background: #e10600;
+      color: white;
+      border-color: #e10600;
+    }}
+    .stats-row {{
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }}
+    .stat-card {{
+      background: #1a1a1a;
+      border-radius: 6px;
+      padding: 14px 20px;
+      min-width: 130px;
+      text-align: center;
+    }}
+    .stat-num   {{ font-size: 1.8rem; font-weight: bold; }}
+    .stat-label {{ font-size: 0.75rem; color: #888; margin-top: 4px; text-transform: uppercase; }}
+    .search-box {{
+      width: 100%;
+      padding: 8px 14px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #ccc;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }}
+    .search-box:focus {{ outline: none; border-color: #e10600; }}
+  </style>
 </head>
 <body>
   <h1>🏎 PitCode — Reporte de Tokens</h1>
   <div class="summary">
-    Archivo analizado: <strong>{source_file}</strong> &nbsp;|&nbsp;
-    Tokens encontrados: <strong>{len(token_list)}</strong> &nbsp;|&nbsp;
+    Archivo: <strong>{source_file}</strong> &nbsp;|&nbsp;
+    Tokens: <strong>{len(token_list)}</strong> &nbsp;|&nbsp;
     Errores léxicos: <strong>{len(error_list)}</strong>
   </div>
 
+  <h2>Resumen Estadístico</h2>
+  <div class="stats-row">{stat_cards}</div>
+
   <h2>Tokens y Lexemas <span class="badge ok">{len(token_list)}</span></h2>
-  <table>
+
+  <input class="search-box" type="text" id="searchBox" placeholder="🔍 Buscar token o lexema..." onkeyup="filterTable()">
+
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterCat('', this)">Todos</button>
+    <button class="filter-btn" onclick="filterCat('Palabra Reservada', this)">Palabras Reservadas</button>
+    <button class="filter-btn" onclick="filterCat('Operador', this)">Operadores</button>
+    <button class="filter-btn" onclick="filterCat('Literal', this)">Literales</button>
+    <button class="filter-btn" onclick="filterCat('Identificador', this)">Identificadores</button>
+    <button class="filter-btn" onclick="filterCat('Delimitador', this)">Delimitadores</button>
+  </div>
+
+  <table id="tokenTable">
     <thead>
-      <tr><th>Token</th><th>Lexema</th><th>Línea</th><th>Columna</th></tr>
+      <tr><th>Token</th><th>Lexema</th><th>Categoría</th><th>Línea</th><th>Columna</th></tr>
     </thead>
     <tbody>{rows}</tbody>
   </table>
 
   {error_section}
+
+  <script>
+    let currentCat = '';
+    let currentSearch = '';
+
+    function filterCat(cat, btn) {{
+      currentCat = cat;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyFilters();
+    }}
+
+    function filterTable() {{
+      currentSearch = document.getElementById('searchBox').value.toLowerCase();
+      applyFilters();
+    }}
+
+    function applyFilters() {{
+      const rows = document.querySelectorAll('#tokenTable tbody tr');
+      rows.forEach(row => {{
+        const cat     = row.getAttribute('data-cat') || '';
+        const text    = row.innerText.toLowerCase();
+        const catOk   = !currentCat || cat === currentCat;
+        const searchOk= !currentSearch || text.includes(currentSearch);
+        row.style.display = (catOk && searchOk) ? '' : 'none';
+      }});
+    }}
+  </script>
 
   <footer>PitCode Compiler · Compiladores 2026 · Fase I</footer>
 </body>
@@ -430,10 +602,12 @@ def generate_error_report(lex_errors, syn_errors, source_file, output_path):
 
 def main():
     # ── Leer archivo fuente ──
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
     if len(sys.argv) > 1:
-        source_file = sys.argv[1]
+        source_file = os.path.abspath(sys.argv[1])
     else:
-        source_file = os.path.join(os.path.dirname(__file__), 'prueba.pitcode')
+        source_file = os.path.join(BASE_DIR, 'prueba.pitcode')
 
     print("=" * 60)
     print("  🏎  PitCode Compiler — Fase I")
@@ -455,13 +629,13 @@ def main():
 
     # ── Fase 3: Tabla de Símbolos ──
     print("[ 3/3 ] Construyendo Tabla de Símbolos...")
-    symbol_table = build_symbol_table(ast)
+    symbol_table = build_symbol_table(ast, source_code)
     print(f"        {len(symbol_table.get_all())} símbolos registrados")
 
     # ── Generar reportes HTML ──
     print()
     print("  Generando reportes HTML...")
-    reports_dir = os.path.join(os.path.dirname(__file__), 'reports')
+    reports_dir = os.path.join(BASE_DIR, 'reports')
     os.makedirs(reports_dir, exist_ok=True)
 
     base = os.path.basename(source_file)
@@ -480,10 +654,11 @@ def main():
         print("  ✓  Compilación exitosa — Sin errores.")
     else:
         print(f"  ⚠  Compilación con {total_errors} error(es).")
-    print(f"  📁 Reportes en: {reports_dir}")
+    print(f"   Reportes en: {reports_dir}")
     print("=" * 60)
 
 
 if __name__ == '__main__':
     main()
+
 
