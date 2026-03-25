@@ -12,30 +12,144 @@ REPORTS_DIR = os.path.join(BASE_DIR, "reports")
 def _ensure_reports():
     os.makedirs(REPORTS_DIR, exist_ok=True)
 
+
+def generar_index(hay_errores=False):
+    """Genera el index.html. Si hay errores, oculta el enlace a la bitácora de tokens."""
+    _ensure_reports()
+
+    if hay_errores:
+        boton_tokens = """<span style="
+            display: inline-block;
+            padding: 15px 30px;
+            background-color: #3a3a3a;
+            color: #666;
+            text-decoration: none;
+            border-radius: 3px;
+            font-weight: bold;
+            border: 1px solid #555;
+            cursor: not-allowed;
+        ">Bitacora de Tokens (no disponible)</span>"""
+    else:
+        boton_tokens = '<a href="reporte_tokens.html">Bitacora de Tokens</a>'
+
+    html = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>PitCode - Reportes</title>
+    <style>
+        body {{
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: Consolas, monospace;
+            text-align: center;
+            padding: 50px;
+        }}
+        h1 {{ color: #569cd6; font-size: 48px; margin-bottom: 10px; }}
+        p  {{ color: #6a9955; margin-bottom: 40px; }}
+        .botones {{ display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }}
+        a {{
+            display: inline-block;
+            padding: 15px 30px;
+            background-color: #264f78;
+            color: #d4d4d4;
+            text-decoration: none;
+            border-radius: 3px;
+            font-weight: bold;
+            border: 1px solid #569cd6;
+        }}
+        a:hover {{ background-color: #094771; color: #ffffff; }}
+    </style>
+</head>
+<body>
+    <h1>PITCODE</h1>
+    <p>// Compiladores 2026</p>
+    <div class="botones">
+        {boton_tokens}
+        <a href="reporte_errores.html">Errores</a>
+        <a href="reporte_simbolos.html">Tabla de Simbolos</a>
+    </div>
+</body>
+</html>"""
+
+    with open(os.path.join(REPORTS_DIR, "index.html"), "w", encoding="utf-8") as f:
+        f.write(html)
+
+
 def generar_reporte_tokens(tokens_list):
     _ensure_reports()
 
+    # ── Si la lista de tokens está vacía (hay errores), mostrar mensaje ──
+    if not tokens_list:
+        html = """<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>PitCode - Reporte de Tokens</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; padding: 30px; }
+    h1 { font-size: 2rem; color: #e10600; border-bottom: 3px solid #e10600; padding-bottom: 10px; margin-bottom: 25px; letter-spacing: 2px; }
+    .nav { margin-bottom: 20px; }
+    .nav a { color: #569cd6; text-decoration: none; font-size: 13px; }
+    .nav a:hover { color: white; }
+    .no-tokens {
+      background: #3a1a1a;
+      border: 1px solid #e10600;
+      border-radius: 6px;
+      padding: 20px 24px;
+      color: #ef9a9a;
+      font-size: 1rem;
+      margin-top: 20px;
+    }
+    footer { margin-top: 40px; color: #444; font-size: 0.8rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="nav"><a href="index.html">&larr; Volver al inicio</a></div>
+  <h1>PitCode &mdash; Reporte de Tokens</h1>
+  <div class="no-tokens">
+    &#9888; No se generaron tokens debido a errores encontrados en el codigo.<br><br>
+    Revise el <a href="reporte_errores.html" style="color:#4fc3f7;text-decoration:underline">Reporte de Errores</a> para mas detalles.
+  </div>
+  <footer>PitCode Compiler &middot; Compiladores 2026 &middot; Fase I</footer>
+</body>
+</html>"""
+        with open(os.path.join(REPORTS_DIR, "reporte_tokens.html"), "w", encoding="utf-8") as f:
+            f.write(html)
+        return
+
+    # ── Generación normal cuando hay tokens (sin errores) ──
     RESERVADAS = {'LAP','SPLIT','PITBOARD','YELLOW_FLAG','RADIO',
                   'STRATEGY_CHECK','STAY_OUT','PUSH','BOX','FORMATION_LAP',
-                  'GAP_CHECK','SECTOR','NO_DATA','BOX_BOX','DRS',
+                  'GAP_CHECK','SECTOR','NO_DATA','BOX_BOX','DRS','PITWALL',
                   'STRATEGY','PODIO','NEUTRO','RACE_START',
-                  'BROADCAST','TELEMETRY','DNF','VSC','APEX',
+                  'BROADCAST','TELEMETRY','DNF','VSC',
                   'PADDOCK','RED_FLAG','BLUE_FLAG','BLACK_FLAG',
                   'CHECKERED_FLAG','TRUE','FALSE'}
+
     OPERADORES  = {'TOW','GAP','ERS','STINT','FUEL_DELTA',
-                  'DEAD_HEAT','OUTLAP','UNDERCUT','OVERCUT',
-                  'BOTH_TYRES','EITHER_TYRE','REVERSE_GRID',
-                  'ASSIGN'}
+                   'DEAD_HEAT','OUTLAP','UNDERCUT','OVERCUT',
+                   'UNDEREQ','OVEREQ',
+                   'BOTH_TYRES','EITHER_TYRE','REVERSE_GRID',
+                   'SAFETY','OVERTAKE','REVERSE',
+                   'ASSIGN','SETUP','PITSTOW','PITGAP','PITERS','PITSTINT',
+                   'FASTLAP','DEGRADATION',
+                   'SLIPSTREAM','POSITION'}
+
     LITERALES   = {'INT_LITERAL','FLOAT_LITERAL','STRING_LITERAL','CHAR_LITERAL'}
+
     DELIMITADORES = {'SEMICOLON','LBRACE','RBRACE','LPAREN','RPAREN',
-                 'COMMA','LBRACKET','RBRACKET','COLON'}
+                     'COMMA','LBRACKET','RBRACKET','COLON',
+                     'CORNER','APEX','GARAGE','READY',
+                     'GRID','ENDGRID','STOP','ALSO','THEN'}
 
     def get_categoria(token_type):
-        if token_type in RESERVADAS:   return 'Palabra Reservada'
-        if token_type in OPERADORES:   return 'Operador'
-        if token_type in LITERALES:    return 'Literal'
-        if token_type in DELIMITADORES:return 'Delimitador'
-        if token_type == 'ID':         return 'Identificador'
+        if token_type in RESERVADAS:    return 'Palabra Reservada'
+        if token_type in OPERADORES:    return 'Operador'
+        if token_type in LITERALES:     return 'Literal'
+        if token_type in DELIMITADORES: return 'Delimitador'
+        if token_type == 'ID':          return 'Identificador'
         return 'Otro'
 
     CAT_COLORS = {
@@ -116,14 +230,14 @@ def generar_reporte_tokens(tokens_list):
   </style>
 </head>
 <body>
-  <div class="nav"><a href="index.html">← Volver al inicio</a></div>
-  <h1>PitCode — Reporte de Tokens</h1>
+  <div class="nav"><a href="index.html">&larr; Volver al inicio</a></div>
+  <h1>PitCode &mdash; Reporte de Tokens</h1>
   <div class="summary">
     Archivo analizado &nbsp;|&nbsp;
     Tokens: <strong>{total}</strong>
   </div>
 
-  <h2>Resumen Estadístico</h2>
+  <h2>Resumen Estadistico</h2>
   <div class="stats-row">{stat_cards}</div>
 
   <h2>Tokens y Lexemas <span style="background:#2e7d32;color:white;padding:2px 10px;border-radius:4px;font-size:0.8rem;margin-left:8px">{total}</span></h2>
@@ -141,7 +255,7 @@ def generar_reporte_tokens(tokens_list):
 
   <table id="tokenTable">
     <thead>
-      <tr><th>Token</th><th>Lexema</th><th>Categoría</th><th>Línea</th><th>Columna</th></tr>
+      <tr><th>Token</th><th>Lexema</th><th>Categoria</th><th>Linea</th><th>Columna</th></tr>
     </thead>
     <tbody>{rows}</tbody>
   </table>
@@ -167,7 +281,7 @@ def generar_reporte_tokens(tokens_list):
     }}
   </script>
 
-  <footer>PitCode Compiler · Compiladores 2026 · Fase I</footer>
+  <footer>PitCode Compiler &middot; Compiladores 2026 &middot; Fase I</footer>
 </body>
 </html>"""
 
@@ -243,8 +357,8 @@ def generar_reporte_errores(errores_list):
   </style>
 </head>
 <body>
-  <div class="nav"><a href="index.html">← Volver al inicio</a></div>
-  <h1>PitCode — Reporte de Errores</h1>
+  <div class="nav"><a href="index.html">&larr; Volver al inicio</a></div>
+  <h1>PitCode &mdash; Reporte de Errores</h1>
   <div class="summary">
     Errores lexicos: <strong>{lexicos}</strong> &nbsp;|&nbsp;
     Errores sintacticos: <strong>{sintacticos}</strong> &nbsp;|&nbsp;
@@ -252,7 +366,7 @@ def generar_reporte_errores(errores_list):
   </div>
   <h2>Errores Encontrados <span class="badge {'ok' if total == 0 else 'warn'}">{total}</span></h2>
   {contenido}
-  <footer>PitCode Compiler · Compiladores 2026 · Fase I</footer>
+  <footer>PitCode Compiler &middot; Compiladores 2026 &middot; Fase I</footer>
 </body>
 </html>"""
 
@@ -262,7 +376,6 @@ def generar_reporte_errores(errores_list):
 def generar_reporte_simbolos(ast, source_code):
     _ensure_reports()
 
-    # ── Tabla de Símbolos inline (sin importar main) ──
     scopes = [{}]
     scope_names = ['global']
     all_symbols = []
@@ -386,7 +499,6 @@ def generar_reporte_simbolos(ast, source_code):
     if ast:
         walk(ast)
 
-    # ── Generar HTML ──
     rows = ""
     for s in all_symbols:
         rows += f"""
@@ -406,7 +518,7 @@ def generar_reporte_simbolos(ast, source_code):
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>PitCode - Tabla de Símbolos</title>
+  <title>PitCode - Tabla de Simbolos</title>
   <style>
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
     body {{ font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; padding: 30px; }}
@@ -424,21 +536,21 @@ def generar_reporte_simbolos(ast, source_code):
   </style>
 </head>
 <body>
-  <div class="nav"><a href="index.html">← Volver al inicio</a></div>
-  <h1>PitCode — Tabla de Símbolos</h1>
+  <div class="nav"><a href="index.html">&larr; Volver al inicio</a></div>
+  <h1>PitCode &mdash; Tabla de Simbolos</h1>
   <div class="summary">
-    Símbolos registrados: <strong>{len(all_symbols)}</strong>
+    Simbolos registrados: <strong>{len(all_symbols)}</strong>
   </div>
   <table>
     <thead>
       <tr>
         <th>Nombre</th><th>Tipo</th><th>Rol</th>
-        <th>Ámbito</th><th>Línea</th><th>Columna</th>
+        <th>Ambito</th><th>Linea</th><th>Columna</th>
       </tr>
     </thead>
     <tbody>{rows}</tbody>
   </table>
-  <footer>PitCode Compiler · Compiladores 2026 · Fase I</footer>
+  <footer>PitCode Compiler &middot; Compiladores 2026 &middot; Fase I</footer>
 </body>
 </html>"""
 
@@ -448,4 +560,3 @@ def generar_reporte_simbolos(ast, source_code):
 def abrir_reporte(archivo="index.html"):
     ruta = os.path.join(REPORTS_DIR, archivo)
     webbrowser.open(f"file://{ruta}")
-

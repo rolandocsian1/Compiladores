@@ -173,7 +173,7 @@ class PitCodeApp(ctk.CTk):
             wrap="none"
         )
         self.editor.pack(fill="both", expand=True, padx=5, pady=5)
-        self.editor.insert("0.0", "#. Escribe tu codigo PitCode aqui\n\nrace_start {\n    \n}")
+        self.editor.insert("0.0", "#. Escribe tu codigo PitCode aqui\n\nrace_start garage\n    \nready")
 
     # ─────────────────────────────────────────
     #  TOKENS
@@ -310,19 +310,21 @@ class PitCodeApp(ctk.CTk):
 
                 self.tokens_list  = tokens_list
                 self.errores_list = errores_totales
-                
 
                 # Actualizar UI
                 self.after(0, self._actualizar_ui)
 
+                # Determinar si hay CUALQUIER error
+                hay_errores = len(errores_totales) > 0
+
                 # Generar reportes HTML
-                html_gen.generar_reporte_tokens(tokens_list)
+                # Si hay cualquier error, tokens_list ya viene vacía del lexer (si léxico)
+                # o la vaciamos aquí si hay sintácticos
+                tokens_para_reporte = [] if hay_errores else tokens_list
+                html_gen.generar_reporte_tokens(tokens_para_reporte)
                 html_gen.generar_reporte_errores(errores_totales)
                 html_gen.generar_reporte_simbolos(ast, codigo)
-
-                # Después de obtener los errores
-                print("ERRORES LEXICOS:", errores_lexicos)
-                print("ERRORES SINTACTICOS:", errores_sintacticos)
+                html_gen.generar_index(hay_errores=hay_errores)
 
             except Exception as e:
                 self.after(0, lambda: messagebox.showerror("Error", str(e)))
@@ -335,22 +337,30 @@ class PitCodeApp(ctk.CTk):
         self._actualizar_tokens()
         self._actualizar_errores()
 
-        self.btn_tokens.configure(state="normal")
-        self.btn_errores.configure(state="normal")
-        self.btn_browser.configure(state="normal")
+        hay_errores = len(self.errores_list) > 0
+
+        if hay_errores:
+            self.btn_tokens.configure(state="disabled")
+            self.btn_errores.configure(state="normal")
+            self.btn_browser.configure(state="normal")
+            self.tabview.set("Errores")
+        else:
+            self.btn_tokens.configure(state="normal")
+            self.btn_errores.configure(state="normal")
+            self.btn_browser.configure(state="normal")
 
         total_errores = len(self.errores_list)
         if total_errores == 0:
             self._set_status(f"Analisis completado. {len(self.tokens_list)} tokens. Sin errores.")
         else:
-            self._set_status(f"Analisis completado. {len(self.tokens_list)} tokens. {total_errores} errores.")
+            self._set_status(f"Analisis completado. {total_errores} error(es) encontrado(s). Tokens no disponibles.")
 
     def _actualizar_tokens(self):
         RESERVADAS = ['LAP','SPLIT','PITBOARD','YELLOW_FLAG','RADIO',
                       'STRATEGY_CHECK','STAY_OUT','PUSH','BOX','FORMATION_LAP',
-                      'GAP_CHECK','SECTOR','NO_DATA','BOX_BOX','DRS',
+                      'GAP_CHECK','SECTOR','NO_DATA','BOX_BOX','DRS','PITWALL',
                       'STRATEGY','PODIO','NEUTRO','RACE_START',
-                      'BROADCAST','TELEMETRY','DNF','VSC','APEX',
+                      'BROADCAST','TELEMETRY','DNF','VSC',
                       'PADDOCK','RED_FLAG','BLUE_FLAG','BLACK_FLAG',
                       'CHECKERED_FLAG','TRUE','FALSE']
         LITERALES  = ['INT_LITERAL','FLOAT_LITERAL','STRING_LITERAL','CHAR_LITERAL']
@@ -368,13 +378,19 @@ class PitCodeApp(ctk.CTk):
         self.txt_tokens.configure(state="normal")
         self.txt_tokens.delete("0.0", "end")
 
-        header = f"{'#':<5} {'TOKEN':<20} {'LEXEMA':<20} {'LINEA':<8} {'COLUMNA'}\n"
-        header += "-" * 65 + "\n"
-        self.txt_tokens.insert("end", header)
+        hay_errores = len(self.errores_list) > 0
 
-        for i, tok in enumerate(self.tokens_list, 1):
-            linea = f"{i:<5} {tok['token']:<20} {str(tok['lexeme']):<20} {tok['line']:<8} {tok['column']}\n"
-            self.txt_tokens.insert("end", linea)
+        if hay_errores:
+            self.txt_tokens.insert("end", "  No se generaron tokens debido a errores encontrados.\n")
+            self.txt_tokens.insert("end", "  Revise la pestaña de Errores para mas detalles.\n")
+        else:
+            header = f"{'#':<5} {'TOKEN':<20} {'LEXEMA':<20} {'LINEA':<8} {'COLUMNA'}\n"
+            header += "-" * 65 + "\n"
+            self.txt_tokens.insert("end", header)
+
+            for i, tok in enumerate(self.tokens_list, 1):
+                linea = f"{i:<5} {tok['token']:<20} {str(tok['lexeme']):<20} {tok['line']:<8} {tok['column']}\n"
+                self.txt_tokens.insert("end", linea)
 
         self.txt_tokens.configure(state="disabled")
 
@@ -413,12 +429,19 @@ class PitCodeApp(ctk.CTk):
         self.txt_errores.configure(state="disabled")
 
     def _mostrar_tab(self, tab):
+        if tab == "tokens" and len(self.errores_list) > 0:
+            messagebox.showinfo(
+                "Tokens no disponibles",
+                "No se pueden mostrar tokens porque se encontraron errores.\n"
+                "Corrija los errores e intente de nuevo."
+            )
+            return
+
         tabs = {
             "tokens"  : "Tokens",
             "errores" : "Errores"
         }
         self.tabview.set(tabs[tab])
-        
 
     def _abrir_navegador(self):
         ruta = os.path.abspath(

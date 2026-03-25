@@ -1,0 +1,135 @@
+#. ============================================================
+#. PitCode - Archivo de prueba completo
+#. Compiladores 2026 - Fase I
+#. Prueba TODAS las características del lenguaje
+#. ============================================================
+
+#. ────────────────────────────────────────────
+#.  FUNCIÓN 1: Usa sintaxis con PALABRAS
+#. ────────────────────────────────────────────
+strategy lap calcular_gap corner lap a also lap b apex garage
+    lap diferencia setup a Gap b stop
+    podio diferencia stop
+ready
+
+#. ────────────────────────────────────────────
+#.  FUNCIÓN 2: Usa sintaxis con SÍMBOLOS
+#. ────────────────────────────────────────────
+strategy split promedio(split x, split y) {
+    split resultado = x Tow y;
+    resultado = resultado Stint 2;
+    podio resultado;
+}
+
+#. ────────────────────────────────────────────
+#.  FUNCIÓN 3: Void con palabras
+#. ────────────────────────────────────────────
+strategy neutro mostrar_mensaje corner radio msg apex garage
+    broadcast corner msg apex stop
+ready
+
+#. ────────────────────────────────────────────
+#.  PROGRAMA PRINCIPAL
+#. ────────────────────────────────────────────
+race_start garage
+
+    #. ── Declaraciones con setup (=) ──
+    lap vueltas setup 5 stop
+    split tiempo setup 0.0 stop
+    radio piloto setup "Max Verstappen" stop
+    yellow_flag activo setup true stop
+    pitboard letra setup 'A' stop
+    lap fuel setup 100 stop
+    lap contador setup 0 stop
+
+    #. ── Constante con vsc ──
+    vsc lap MAX_VUELTAS setup 70 stop
+
+    #. ── FORMATION_LAP (for) con fastlap (++) ──
+    formation_lap corner lap i setup 0 stop i UNDERCUT vueltas stop i fastlap apex garage
+        tiempo pitstow 71.3 stop
+        contador fastlap stop
+    ready
+
+    #. ── STRATEGY_CHECK (if/else) con undereq (<=) ──
+    strategy_check corner tiempo undereq 350.0 apex garage
+        broadcast corner "Tiempo excelente, modo push" apex stop
+    ready stay_out garage
+        broadcast corner "Conservar neumaticos" apex stop
+    ready
+
+    #. ── PUSH (while) con DEAD_HEAT (==) y safety (&&) ──
+    push corner activo DEAD_HEAT true safety fuel OVERCUT 0 apex garage
+        fuel pitgap 10 stop
+
+        strategy_check corner fuel undereq 20 apex garage
+            activo setup false stop
+            box_box stop
+        ready stay_out garage
+            broadcast corner "Fuel suficiente" apex stop
+        ready
+    ready
+
+    #. ── BOX...PUSH (do-while) ──
+    lap intentos setup 0 stop
+    box garage
+        intentos fastlap stop
+        broadcast corner "Intento de conexion" apex stop
+    ready push corner intentos UNDERCUT 3 apex stop
+
+    #. ── PITWALL (switch) con then (:) ──
+    pitwall corner vueltas apex garage
+        sector 1 then
+            broadcast corner "Vuelta 1 - Calentamiento" apex stop
+        sector 2 then
+            broadcast corner "Vuelta 2 - Ritmo medio" apex stop
+        sector 5 then
+            broadcast corner "Vuelta 5 - Push total" apex stop
+        no_data then
+            broadcast corner "Vuelta no catalogada" apex stop
+    ready
+
+    #. ── GAP_CHECK (switch clásico con símbolos) ──
+    gap_check (letra) {
+        sector 'A' : broadcast("Clasificacion A");
+        sector 'B' : broadcast("Clasificacion B");
+        no_data : broadcast("Sin clasificacion");
+    }
+
+    #. ── Operadores de comparación nuevos ──
+    strategy_check corner vueltas overeq 3 apex garage
+        broadcast corner "Ya pasaron 3+ vueltas" apex stop
+    ready
+
+    #. ── Operadores lógicos: overtake (||) ──
+    strategy_check corner fuel undereq 10 overtake activo DEAD_HEAT false apex garage
+        broadcast corner "Alerta critica" apex stop
+    ready
+
+    #. ── Asignaciones compuestas ──
+    fuel pitstow 50 stop
+    tiempo pitgap 10.5 stop
+    vueltas piters 2 stop
+    fuel pitstint 3 stop
+
+    #. ── Incremento y decremento ──
+    vueltas fastlap stop
+    fuel degradation stop
+
+    #. ── Llamadas a funciones ──
+    lap resultado setup calcular_gap corner 120 also 115 apex stop
+    split prom setup promedio corner 85.5 also 90.3 apex stop
+    mostrar_mensaje corner "Carrera finalizada" apex stop
+
+    #. ── Broadcast con variable ──
+    broadcast corner resultado apex stop
+    broadcast corner prom apex stop
+
+    #. ── Operador reverse (!) ──
+    strategy_check corner reverse activo apex garage
+        broadcast corner "Piloto inactivo" apex stop
+    ready
+
+    #. ── Fin del programa ──
+    checkered_flag stop
+ready

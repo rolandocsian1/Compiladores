@@ -30,6 +30,7 @@ reserved = {
     'no_data'        : 'NO_DATA',
     'box_box'        : 'BOX_BOX',
     'drs'            : 'DRS',
+    'pitwall'        : 'PITWALL',          # switch
 
     # Funciones y retorno
     'strategy'       : 'STRATEGY',
@@ -45,7 +46,6 @@ reserved = {
     'undercut'       : 'UNDERCUT_KW',
     'dnf'            : 'DNF',
     'vsc'            : 'VSC',
-    'apex'           : 'APEX',
     'paddock'        : 'PADDOCK',
 
     # Banderas especiales
@@ -58,23 +58,54 @@ reserved = {
     'true'           : 'TRUE',
     'false'          : 'FALSE',
 
-    # Operadores aritméticos con nombre (palabras)
-    'Tow'            : 'TOW',
-    'Gap'            : 'GAP',
-    'ERS'            : 'ERS',
-    'Stint'          : 'STINT',
-    'Fuel_Delta'     : 'FUEL_DELTA',
+    # ── Operadores aritméticos (palabras) ──
+    'Tow'            : 'TOW',              # +
+    'Gap'            : 'GAP',              # -
+    'ERS'            : 'ERS',              # *
+    'Stint'          : 'STINT',            # /
+    'Fuel_Delta'     : 'FUEL_DELTA',       # %
 
-    # Operadores de comparación con nombre (palabras)
-    'DEAD_HEAT'      : 'DEAD_HEAT',
-    'Outlap'         : 'OUTLAP',
-    'UNDERCUT'       : 'UNDERCUT',
-    'OVERCUT'        : 'OVERCUT',
+    # ── Operadores de comparación (palabras) ──
+    'DEAD_HEAT'      : 'DEAD_HEAT',        # ==
+    'Outlap'         : 'OUTLAP',           # >
+    'UNDERCUT'       : 'UNDERCUT',         # <
+    'OVERCUT'        : 'OVERCUT',          # !=  / >
+    'undereq'        : 'UNDEREQ',          # <=
+    'overeq'         : 'OVEREQ',           # >=
 
-    # Operadores lógicos con nombre (palabras)
-    'BOTH_TYRES'     : 'BOTH_TYRES',
-    'EITHER_TYRE'    : 'EITHER_TYRE',
-    'REVERSE_GRID'   : 'REVERSE_GRID',
+    # ── Operadores lógicos (palabras) ──
+    'BOTH_TYRES'     : 'BOTH_TYRES',       # && (alias legacy)
+    'EITHER_TYRE'    : 'EITHER_TYRE',      # || (alias legacy)
+    'REVERSE_GRID'   : 'REVERSE_GRID',     # !  (alias legacy)
+    'safety'         : 'SAFETY',           # &&
+    'overtake'       : 'OVERTAKE',         # ||
+    'reverse'        : 'REVERSE',          # !
+
+    # ── Operadores de asignación (palabras) ──
+    'setup'          : 'SETUP',            # =
+    'pitstow'        : 'PITSTOW',         # +=
+    'pitgap'         : 'PITGAP',          # -=
+    'piters'         : 'PITERS',          # *=
+    'pitstint'       : 'PITSTINT',        # /=
+
+    # ── Operadores de incremento/decremento (palabras) ──
+    'fastlap'        : 'FASTLAP',         # ++
+    'degradation'    : 'DEGRADATION',     # --
+
+    # ── Operadores de puntero (palabras) ──
+    'slipstream'     : 'SLIPSTREAM',       # * (puntero)
+    'position'       : 'POSITION',         # & (dirección)
+
+    # ── Delimitadores (palabras) ──
+    'corner'         : 'CORNER',           # (
+    'apex'           : 'APEX',             # )
+    'garage'         : 'GARAGE',           # {
+    'ready'          : 'READY',            # }
+    'grid'           : 'GRID',             # [
+    'endgrid'        : 'ENDGRID',          # ]
+    'stop'           : 'STOP',             # ;
+    'also'           : 'ALSO',             # ,
+    'then'           : 'THEN',             # :
 }
 
 # ─────────────────────────────────────────────
@@ -153,14 +184,14 @@ def t_newline(t):
 # ─────────────────────────────────────────────
 #  REGLAS SIMPLES (solo símbolos)
 #  Los operadores son PALABRAS reservadas
-#  (Tow, Gap, ERS, DEAD_HEAT, etc.) reconocidas
-#  en t_ID via el diccionario reserved.
+#  reconocidas en t_ID via el diccionario reserved.
+#  Aquí solo van los símbolos literales.
 # ─────────────────────────────────────────────
 
 # Asignación simple (símbolo)
 t_ASSIGN        = r'='
 
-# Delimitadores
+# Delimitadores (símbolos)
 t_SEMICOLON     = r';'
 t_LBRACE        = r'\{'
 t_RBRACE        = r'\}'
@@ -221,6 +252,7 @@ def analyze(source_code):
     Analiza léxicamente el código fuente de PitCode.
     Retorna:
         token_list : lista de dicts {token, lexema, línea, columna}
+                     (vacía si se encontraron errores léxicos)
         error_list : lista de errores léxicos encontrados
     """
     global error_list
@@ -241,6 +273,10 @@ def analyze(source_code):
             'column'  : col,
         })
 
+    # ── Si hay errores léxicos, NO reportar tokens ──
+    if error_list:
+        return [], error_list
+
     return token_list, error_list
 
 # ─────────────────────────────────────────────
@@ -255,37 +291,46 @@ if __name__ == '__main__':
         print(f"[PitCode Lexer] Analizando: {sys.argv[1]}\n")
     else:
         source = """
-#. Programa de prueba PitCode
+#. Programa de prueba PitCode con nuevos operadores
 /* Bloque de comentario:
-   Calcula tiempo promedio */
+   Prueba completa del lexer */
 
-race_start {
-    lap vueltas = 5;
-    split tiempo = 1.23;
-    radio piloto = "Lewis Hamilton";
-    yellow_flag activo = true;
-    pitboard letra = 'A';
+strategy lap calcular_gap corner lap a also lap b apex garage
+    lap diferencia setup a Gap b stop
+    podio diferencia stop
+ready
 
-    strategy_check (vueltas OVERCUT 3) {
-        broadcast("Modo push activado");
-    } stay_out {
-        broadcast("Stay out");
-    }
+race_start garage
+    lap vueltas setup 5 stop
+    split tiempo setup 1.23 stop
+    radio piloto setup "Max Verstappen" stop
+    yellow_flag activo setup true stop
+    pitboard letra setup 'A' stop
 
-    formation_lap (lap i = 0; i UNDERCUT vueltas; i = i Tow 1) {
-        tiempo = tiempo Tow 0.5;
-    }
+    formation_lap corner lap i setup 0 stop i UNDERCUT vueltas stop i fastlap apex garage
+        tiempo pitstow 71.3 stop
+    ready
 
-    push (activo DEAD_HEAT true) {
-        vueltas = vueltas Gap 1;
-    }
+    strategy_check corner tiempo UNDERCUT 350.0 apex garage
+        broadcast corner "Tiempo excelente" apex stop
+    ready stay_out garage
+        broadcast corner "Conservar neumaticos" apex stop
+    ready
 
-    checkered_flag;
-}
+    push corner activo DEAD_HEAT true apex garage
+        lap fuel setup 80 stop
+        strategy_check corner fuel undereq 20 apex garage
+            activo setup false stop
+            box_box stop
+        ready stay_out garage
+            fuel pitgap 5 stop
+        ready
+    ready
 
-strategy lap calcular(lap a, lap b) {
-    podio a Tow b;
-}
+    lap resultado setup calcular_gap corner 120 also 115 apex stop
+    broadcast corner resultado apex stop
+    checkered_flag stop
+ready
         """
         print("[PitCode Lexer] Ejecutando código de prueba interno\n")
 
