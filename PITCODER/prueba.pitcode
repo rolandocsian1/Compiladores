@@ -1,0 +1,37 @@
+lap_note Programa de prueba PitCode
+
+strategy lap calcular_gap corner lap a also lap b apex garage
+    lap diferencia setup a Gap b stop
+    podio diferencia stop
+ready
+
+race_start garage
+    lap vueltas setup 5 stop
+    split tiempo setup 0.0 stop
+    radio piloto setup transmission Max Verstappen transmission stop
+    yellow_flag activo setup true stop
+
+    formation_lap corner lap i setup 0 stop i UNDERCUT vueltas stop i fastlap apex garage
+        tiempo pitstow 71.3 stop
+    ready
+
+    strategy_check corner tiempo UNDERCUT 350.0 apex garage
+        broadcast corner transmission Tiempo excelente transmission apex stop
+    ready stay_out garage
+        broadcast corner transmission Conservar neumaticos transmission apex stop
+    ready
+
+    push corner activo DEAD_HEAT true apex garage
+        lap fuel setup 80 stop
+        strategy_check corner fuel UNDERCUT 20 apex garage
+            activo setup false stop
+            box_box stop
+        ready stay_out garage
+            fuel pitgap 5 stop
+        ready
+    ready
+
+    lap resultado setup calcular_gap corner 120 also 115 apex stop
+    broadcast corner resultado apex stop
+    checkered_flag stop
+ready
