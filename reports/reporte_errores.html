@@ -1,74 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>PitCode - Reporte de Errores</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; padding: 30px; }
-    h1 { font-size: 2rem; color: #e10600; border-bottom: 3px solid #e10600; padding-bottom: 10px; margin-bottom: 25px; letter-spacing: 2px; }
-    h2 { font-size: 1.2rem; color: #ff8c00; margin: 30px 0 12px; letter-spacing: 1px; }
-    .nav { margin-bottom: 20px; }
-    .nav a { color: #569cd6; text-decoration: none; font-size: 13px; }
-    .nav a:hover { color: white; }
-    .badge { display: inline-block; background: #e10600; color: white; border-radius: 4px; padding: 2px 10px; font-size: 0.8rem; margin-left: 8px; vertical-align: middle; }
-    .badge.ok { background: #2e7d32; }
-    .badge.warn { background: #ff8c00; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 20px; }
-    th { background: #e10600; color: white; padding: 10px 14px; text-align: left; letter-spacing: 1px; font-size: 0.8rem; text-transform: uppercase; }
-    td { padding: 8px 14px; border-bottom: 1px solid #2a2a2a; }
-    tr:nth-child(even) td { background: #1a1a1a; }
-    tr:hover td { background: #222; }
-    .tag-error { color: #ef9a9a; font-weight: bold; }
-    .tag-line  { color: #888; font-family: monospace; }
-    .tag-sug   { color: #81c784; font-style: italic; font-size: 0.85rem; }
-    .no-errors { background: #1b3a1f; border: 1px solid #2e7d32; border-radius: 6px; padding: 16px 20px; color: #a5d6a7; font-size: 1rem; }
-    .summary { background: #1a1a1a; border-left: 4px solid #e10600; padding: 12px 18px; margin-bottom: 20px; border-radius: 0 6px 6px 0; font-size: 0.9rem; color: #bbb; }
-    footer { margin-top: 40px; color: #444; font-size: 0.8rem; text-align: center; }
-  </style>
-</head>
-<body>
-  <div class="nav"><a href="index.html">&larr; Volver al inicio</a></div>
-  <h1>PitCode &mdash; Reporte de Errores</h1>
-  <div class="summary">
-    Errores lexicos: <strong>0</strong> &nbsp;|&nbsp;
-    Errores sintacticos: <strong>2</strong> &nbsp;|&nbsp;
-    Total: <strong>2</strong>
-  </div>
-  <h2>Errores Encontrados <span class="badge warn">2</span></h2>
-  
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Tipo</th>
-                    <th>Mensaje</th>
-                    <th>Linea</th>
-                    <th>Columna</th>
-                    <th>Sugerencia</th>
-                </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td class="tag-line">1</td>
-                <td class="tag-error">Sintáctico</td>
-                <td>Token inesperado 'race_start' (tipo: RACE_START)</td>
-                <td class="tag-line">8</td>
-                <td class="tag-line">1</td>
-                <td class="tag-sug">race_start → Función principal (main)</td>
-            </tr>
-            
-            <tr>
-                <td class="tag-line">2</td>
-                <td class="tag-error">Sintáctico</td>
-                <td>Fin de archivo inesperado — ¿falta cerrar un bloque con ready?</td>
-                <td class="tag-line">37</td>
-                <td class="tag-line">5</td>
-                <td class="tag-sug">Verifique que todos los bloques garage...ready estén cerrados</td>
-            </tr>
-            </tbody>
-        </table>
-        
-  <footer>PitCode Compiler &middot; Compiladores 2026 &middot; Fase I</footer>
-</body>
-</html>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>PitCode - Errores</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',sans-serif;background:#0f0f0f;color:#e0e0e0;padding:30px}h1{font-size:2rem;color:#e10600;border-bottom:3px solid #e10600;padding-bottom:10px;margin-bottom:25px}h2{font-size:1.2rem;color:#ff8c00;margin:30px 0 12px}.nav{margin-bottom:20px}.nav a{color:#569cd6;text-decoration:none;font-size:13px}.badge{display:inline-block;background:#e10600;color:white;border-radius:4px;padding:2px 10px;font-size:0.8rem;margin-left:8px}.badge.ok{background:#2e7d32}.badge.warn{background:#ff8c00}table{width:100%;border-collapse:collapse;font-size:0.9rem;margin-bottom:20px}th{background:#e10600;color:white;padding:10px 14px;text-align:left;font-size:0.8rem;text-transform:uppercase}td{padding:8px 14px;border-bottom:1px solid #2a2a2a}tr:nth-child(even) td{background:#1a1a1a}tr:hover td{background:#222}.tag-error{color:#ef9a9a;font-weight:bold}.tag-warn{color:#ffcc80;font-weight:bold}.tag-line{color:#888;font-family:monospace}.tag-sug{color:#81c784;font-style:italic;font-size:0.85rem}.no-errors{background:#1b3a1f;border:1px solid #2e7d32;border-radius:6px;padding:16px 20px;color:#a5d6a7}.summary{background:#1a1a1a;border-left:4px solid #e10600;padding:12px 18px;margin-bottom:20px;border-radius:0 6px 6px 0;font-size:0.9rem;color:#bbb}footer{margin-top:40px;color:#444;font-size:0.8rem;text-align:center}</style></head><body>
+<div class="nav"><a href="index.html">&larr; Volver al inicio</a></div>
+<h1>PitCode &mdash; Reporte de Errores</h1>
+<div class="summary">Léxicos: <strong>0</strong> &nbsp;|&nbsp; Sintácticos: <strong>32</strong> &nbsp;|&nbsp; Semánticos: <strong>0</strong> &nbsp;|&nbsp; Total: <strong>32</strong></div>
+<h2>Errores Encontrados <span class="badge warn">32</span></h2>
+<table><thead><tr><th>#</th><th>Tipo</th><th>Mensaje</th><th>Línea</th><th>Col</th><th>Sugerencia</th></tr></thead><tbody><tr><td class="tag-line">1</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'ready' (tipo: READY)</td><td class="tag-line">16</td><td class="tag-line">5</td><td class="tag-sug">ready → Llave derecha }</td></tr><tr><td class="tag-line">2</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'corner' (tipo: CORNER)</td><td class="tag-line">18</td><td class="tag-line">20</td><td class="tag-sug">corner → Paréntesis izquierdo (</td></tr><tr><td class="tag-line">3</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'apex' (tipo: APEX)</td><td class="tag-line">18</td><td class="tag-line">49</td><td class="tag-sug">apex → Paréntesis derecho )</td></tr><tr><td class="tag-line">4</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'broadcast' (tipo: BROADCAST)</td><td class="tag-line">19</td><td class="tag-line">9</td><td class="tag-sug">broadcast → Salida (print)</td></tr><tr><td class="tag-line">5</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'Tiempo excelente' (tipo: STRING_LITERAL)</td><td class="tag-line">19</td><td class="tag-line">56</td><td class="tag-sug">transmission...transmission → Cadena de texto</td></tr><tr><td class="tag-line">6</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'stay_out' (tipo: STAY_OUT)</td><td class="tag-line">20</td><td class="tag-line">11</td><td class="tag-sug">stay_out → Alternativa (else)</td></tr><tr><td class="tag-line">7</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'push' (tipo: PUSH)</td><td class="tag-line">24</td><td class="tag-line">5</td><td class="tag-sug">push → Ciclo while</td></tr><tr><td class="tag-line">8</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'activo' (tipo: ID)</td><td class="tag-line">24</td><td class="tag-line">17</td><td class="tag-sug">identificador → Nombre de variable o función</td></tr><tr><td class="tag-line">9</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'true' (tipo: ID)</td><td class="tag-line">24</td><td class="tag-line">34</td><td class="tag-sug">identificador → Nombre de variable o función</td></tr><tr><td class="tag-line">10</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'garage' (tipo: GARAGE)</td><td class="tag-line">24</td><td class="tag-line">44</td><td class="tag-sug">garage → Llave izquierda {</td></tr><tr><td class="tag-line">11</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'fuel' (tipo: ID)</td><td class="tag-line">25</td><td class="tag-line">13</td><td class="tag-sug">identificador → Nombre de variable o función</td></tr><tr><td class="tag-line">12</td><td class="tag-error">Sintáctico</td><td>Token inesperado '80' (tipo: INT_LITERAL)</td><td class="tag-line">25</td><td class="tag-line">24</td><td class="tag-sug">número entero → Ej: 5, 10, 100</td></tr><tr><td class="tag-line">13</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'strategy_check' (tipo: STRATEGY_CHECK)</td><td class="tag-line">26</td><td class="tag-line">9</td><td class="tag-sug">strategy_check → Condicional (if)</td></tr><tr><td class="tag-line">14</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'fuel' (tipo: ID)</td><td class="tag-line">26</td><td class="tag-line">31</td><td class="tag-sug">identificador → Nombre de variable o función</td></tr><tr><td class="tag-line">15</td><td class="tag-error">Sintáctico</td><td>Token inesperado '20' (tipo: INT_LITERAL)</td><td class="tag-line">26</td><td class="tag-line">45</td><td class="tag-sug">número entero → Ej: 5, 10, 100</td></tr><tr><td class="tag-line">16</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'garage' (tipo: GARAGE)</td><td class="tag-line">26</td><td class="tag-line">53</td><td class="tag-sug">garage → Llave izquierda {</td></tr><tr><td class="tag-line">17</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'setup' (tipo: SETUP)</td><td class="tag-line">27</td><td class="tag-line">20</td><td class="tag-sug">setup → Asignación =</td></tr><tr><td class="tag-line">18</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'stop' (tipo: STOP)</td><td class="tag-line">27</td><td class="tag-line">32</td><td class="tag-sug">stop → Fin de sentencia ;</td></tr><tr><td class="tag-line">19</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'stop' (tipo: STOP)</td><td class="tag-line">28</td><td class="tag-line">21</td><td class="tag-sug">stop → Fin de sentencia ;</td></tr><tr><td class="tag-line">20</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'stay_out' (tipo: STAY_OUT)</td><td class="tag-line">29</td><td class="tag-line">15</td><td class="tag-sug">stay_out → Alternativa (else)</td></tr><tr><td class="tag-line">21</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'fuel' (tipo: ID)</td><td class="tag-line">30</td><td class="tag-line">13</td><td class="tag-sug">identificador → Nombre de variable o función</td></tr><tr><td class="tag-line">22</td><td class="tag-error">Sintáctico</td><td>Token inesperado '5' (tipo: INT_LITERAL)</td><td class="tag-line">30</td><td class="tag-line">25</td><td class="tag-sug">número entero → Ej: 5, 10, 100</td></tr><tr><td class="tag-line">23</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'ready' (tipo: READY)</td><td class="tag-line">31</td><td class="tag-line">9</td><td class="tag-sug">ready → Llave derecha }</td></tr><tr><td class="tag-line">24</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'lap' (tipo: LAP)</td><td class="tag-line">34</td><td class="tag-line">5</td><td class="tag-sug">lap → Tipo entero (int)</td></tr><tr><td class="tag-line">25</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'setup' (tipo: SETUP)</td><td class="tag-line">34</td><td class="tag-line">19</td><td class="tag-sug">setup → Asignación =</td></tr><tr><td class="tag-line">26</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'corner' (tipo: CORNER)</td><td class="tag-line">34</td><td class="tag-line">38</td><td class="tag-sug">corner → Paréntesis izquierdo (</td></tr><tr><td class="tag-line">27</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'also' (tipo: ALSO)</td><td class="tag-line">34</td><td class="tag-line">49</td><td class="tag-sug">also → Separador ,</td></tr><tr><td class="tag-line">28</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'apex' (tipo: APEX)</td><td class="tag-line">34</td><td class="tag-line">58</td><td class="tag-sug">apex → Paréntesis derecho )</td></tr><tr><td class="tag-line">29</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'broadcast' (tipo: BROADCAST)</td><td class="tag-line">35</td><td class="tag-line">5</td><td class="tag-sug">broadcast → Salida (print)</td></tr><tr><td class="tag-line">30</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'resultado' (tipo: ID)</td><td class="tag-line">35</td><td class="tag-line">22</td><td class="tag-sug">identificador → Nombre de variable o función</td></tr><tr><td class="tag-line">31</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'stop' (tipo: STOP)</td><td class="tag-line">35</td><td class="tag-line">37</td><td class="tag-sug">stop → Fin de sentencia ;</td></tr><tr><td class="tag-line">32</td><td class="tag-error">Sintáctico</td><td>Token inesperado 'stop' (tipo: STOP)</td><td class="tag-line">36</td><td class="tag-line">20</td><td class="tag-sug">stop → Fin de sentencia ;</td></tr></tbody></table>
+<footer>PitCode Compiler &middot; Compiladores 2026</footer></body></html>

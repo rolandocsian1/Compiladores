@@ -1,6 +1,6 @@
 # ============================================================
 #   PitCode - Interfaz Gráfica
-#   Compiladores 2026 - Fase I
+#   Compiladores 2026 - Fase I & II
 # ============================================================
 
 import customtkinter as ctk
@@ -12,6 +12,8 @@ import webbrowser
 import html_gen
 from lexer import analyze as analizar_codigo
 from parser import parse as analizar_sintaxis
+from semantic import SemanticAnalyzer
+from codegen import ThreeAddressGenerator, CppTranslator
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -23,30 +25,19 @@ class LineNumbers(tk.Canvas):
     def __init__(self, parent, textbox, **kwargs):
         super().__init__(parent, **kwargs)
         self.textbox = textbox
-        # Acceder al widget Text interno de CTkTextbox
         self._text_widget = textbox._textbox
-        self.configure(
-            bg="#1a1a1a",
-            bd=0,
-            highlightthickness=0,
-            width=45
-        )
+        self.configure(bg="#1a1a1a", bd=0, highlightthickness=0, width=45)
 
-        # Vincular eventos para actualizar números
         self._text_widget.bind("<<Modified>>", self._on_modify)
         self._text_widget.bind("<Configure>", self._on_modify)
         self._text_widget.bind("<KeyRelease>", self._on_modify)
         self._text_widget.bind("<MouseWheel>", self._on_scroll)
         self._text_widget.bind("<Button-1>", self._on_modify)
-
-        # Sincronizar scroll
         self._text_widget.configure(yscrollcommand=self._on_text_scroll)
-
         self.after(100, self.redraw)
 
     def _on_modify(self, event=None):
         self.after_idle(self.redraw)
-        # Resetear flag de Modified
         try:
             self._text_widget.edit_modified(False)
         except:
@@ -60,41 +51,23 @@ class LineNumbers(tk.Canvas):
 
     def redraw(self):
         self.delete("all")
-
-        # Obtener la primera línea visible
         first_visible = self._text_widget.index("@0,0")
         first_line = int(first_visible.split(".")[0])
-
-        # Obtener la última línea del documento
         last_line_idx = self._text_widget.index("end-1c")
         total_lines = int(last_line_idx.split(".")[0])
 
-        # Obtener la fuente del textbox para calcular posiciones
-        try:
-            font_str = self._text_widget.cget("font")
-        except:
-            font_str = "Consolas 13"
-
-        # Dibujar cada número de línea en su posición correcta
         i = first_line
         while True:
-            # Obtener la posición Y de esta línea en el widget
             dline = self._text_widget.dlineinfo(f"{i}.0")
             if dline is None:
                 break
-
             y = dline[1]
             line_height = dline[3]
-
-            # Dibujar el número centrado verticalmente
             self.create_text(
                 40, y + line_height // 2,
-                anchor="e",
-                text=str(i),
-                fill="#555555",
-                font=("Consolas", 12)
+                anchor="e", text=str(i),
+                fill="#555555", font=("Consolas", 12)
             )
-
             i += 1
             if i > total_lines:
                 break
@@ -114,8 +87,12 @@ class PitCodeApp(ctk.CTk):
 
         self._build_ui()
 
+    # ─────────────────────────────────────────
+    #  CONSTRUCCIÓN DE LA INTERFAZ
+    # ─────────────────────────────────────────
     def _build_ui(self):
 
+        # ── HEADER ──
         self.header = ctk.CTkFrame(self, height=60, corner_radius=0)
         self.header.pack(fill="x", side="top")
         self.header.pack_propagate(False)
@@ -126,10 +103,11 @@ class PitCodeApp(ctk.CTk):
         ).pack(side="left", padx=20, pady=10)
 
         ctk.CTkLabel(
-            self.header, text="// Compiladores 2026",
+            self.header, text="// Compiladores 2026 - Fase I & II",
             font=ctk.CTkFont(family="Consolas", size=13), text_color="gray"
         ).pack(side="left", padx=5, pady=10)
 
+        # ── PANEL IZQUIERDO ──
         self.panel_izq = ctk.CTkFrame(self, width=200, corner_radius=0)
         self.panel_izq.pack(fill="y", side="left")
         self.panel_izq.pack_propagate(False)
@@ -189,6 +167,7 @@ class PitCodeApp(ctk.CTk):
         )
         self.btn_browser.pack(padx=10, pady=5, fill="x")
 
+        # ── PANEL PRINCIPAL ──
         self.panel_main = ctk.CTkFrame(self, corner_radius=0)
         self.panel_main.pack(fill="both", expand=True, side="left")
 
@@ -203,6 +182,7 @@ class PitCodeApp(ctk.CTk):
         self._build_tokens()
         self._build_errores()
 
+        # ── STATUS BAR ──
         self.statusbar = ctk.CTkFrame(self, height=30, corner_radius=0)
         self.statusbar.pack(fill="x", side="bottom")
         self.statusbar.pack_propagate(False)
@@ -214,45 +194,27 @@ class PitCodeApp(ctk.CTk):
         self.lbl_status.pack(side="left", padx=10)
 
     def _build_editor(self):
-        # Frame contenedor para números de línea + editor
         self.editor_frame = ctk.CTkFrame(self.tab_editor, fg_color="transparent")
         self.editor_frame.pack(fill="both", expand=True, padx=5, pady=5)
 
-        # Editor de texto
         self.editor = ctk.CTkTextbox(
             self.editor_frame,
             font=ctk.CTkFont(family="Consolas", size=13),
             wrap="none"
         )
 
-        # Números de línea (se crea después del editor para tener la referencia)
-        self.line_numbers = LineNumbers(
-            self.editor_frame,
-            self.editor
-        )
-
-        # Empaquetar: números a la izquierda, editor ocupa el resto
+        self.line_numbers = LineNumbers(self.editor_frame, self.editor)
         self.line_numbers.pack(side="left", fill="y")
         self.editor.pack(side="left", fill="both", expand=True)
 
-        # Texto por defecto
-        self.editor.insert("0.0", "#. Escribe tu codigo PitCode aqui\n\nrace_start garage\n    \nready")
+        self.editor.insert("0.0", "lap_note Escribe tu codigo PitCode aqui\n\nrace_start garage\n    \nready")
 
-        # Sincronizar scroll del editor con números de línea
-        self.editor._textbox.configure(yscrollcommand=self._sync_scroll)
-
-        # Actualizar números cuando cambia el contenido
+        self.editor._textbox.configure(yscrollcommand=lambda *a: self.line_numbers.redraw())
         self.editor._textbox.bind("<KeyRelease>", lambda e: self.line_numbers.redraw())
         self.editor._textbox.bind("<MouseWheel>", lambda e: self.after(10, self.line_numbers.redraw))
         self.editor._textbox.bind("<Button-1>", lambda e: self.after(10, self.line_numbers.redraw))
         self.editor._textbox.bind("<Configure>", lambda e: self.after(10, self.line_numbers.redraw))
-
-        # Redibujar inicial
         self.after(200, self.line_numbers.redraw)
-
-    def _sync_scroll(self, *args):
-        """Sincroniza el scroll del editor con los números de línea."""
-        self.line_numbers.redraw()
 
     def _build_tokens(self):
         self.frame_stats_tokens = ctk.CTkFrame(self.tab_tokens)
@@ -310,12 +272,21 @@ class PitCodeApp(ctk.CTk):
         )
         self.lbl_sintacticos.pack(side="left", padx=15, pady=8)
 
+        self.lbl_semanticos = ctk.CTkLabel(
+            self.frame_stats_errores, text="Semanticos: 0",
+            font=ctk.CTkFont(family="Consolas", size=12), text_color="#ff8c00"
+        )
+        self.lbl_semanticos.pack(side="left", padx=15, pady=8)
+
         self.txt_errores = ctk.CTkTextbox(
             self.tab_errores, font=ctk.CTkFont(family="Consolas", size=12), wrap="none"
         )
         self.txt_errores.pack(fill="both", expand=True, padx=5, pady=5)
         self.txt_errores.configure(state="disabled")
 
+    # ─────────────────────────────────────────
+    #  FUNCIONES PRINCIPALES
+    # ─────────────────────────────────────────
     def _cargar_archivo(self):
         ruta = filedialog.askopenfilename(
             title="Seleccionar archivo PitCode",
@@ -338,8 +309,6 @@ class PitCodeApp(ctk.CTk):
         self.editor.delete("0.0", "end")
         self.editor.insert("0.0", codigo)
         self.btn_analizar.configure(state="normal")
-
-        # Actualizar números de línea después de cargar
         self.after(100, self.line_numbers.redraw)
 
     def _analizar(self):
@@ -354,21 +323,69 @@ class PitCodeApp(ctk.CTk):
 
         def proceso():
             try:
+                # ── Fase 1: Léxico ──
                 tokens_list, errores_lexicos = analizar_codigo(codigo)
+
+                # ── Fase 1: Sintáctico ──
                 ast, errores_sintacticos = analizar_sintaxis(codigo)
-                errores_totales = errores_lexicos + errores_sintacticos
+
+                # ── Fase 2: Semántico ──
+                errores_semanticos = []   # Errores REALES (bloquean)
+                advertencias = []          # Advertencias (NO bloquean)
+
+                if not errores_lexicos and not errores_sintacticos and ast:
+                    sem = SemanticAnalyzer()
+                    sem.analyze(ast)
+                    errores_semanticos = sem.get_errors()       # Solo errores reales
+                    advertencias = sem.get_warnings()           # Solo advertencias
+
+                # ── Errores que BLOQUEAN (sin advertencias) ──
+                errores_reales = errores_lexicos + errores_sintacticos + errores_semanticos
+                hay_errores = len(errores_reales) > 0
+
+                # ── Todo para mostrar (con advertencias) ──
+                errores_para_mostrar = errores_reales + advertencias
 
                 self.tokens_list  = tokens_list
-                self.errores_list = errores_totales
+                self.errores_list = errores_para_mostrar
 
+                # Guardar referencia para saber si hay errores reales
+                self._hay_errores_reales = hay_errores
+
+                # ── Fase 2: Generación de código (solo si NO hay errores reales) ──
+                code_3d_str = ""
+                cpp_code = ""
+
+                if not hay_errores and ast:
+                    # Código de tres direcciones
+                    gen = ThreeAddressGenerator()
+                    gen.generate(ast)
+                    code_3d_str = gen.get_code_string()
+
+                    # Traducción a C++
+                    translator = CppTranslator()
+                    reports_dir = os.path.join(
+                        os.path.dirname(os.path.abspath(__file__)), "reports"
+                    )
+                    cpp_path = os.path.join(reports_dir, "output.cpp")
+                    cpp_code = translator.save_to_file(ast, cpp_path)
+
+                # Actualizar UI
                 self.after(0, self._actualizar_ui)
 
-                hay_errores = len(errores_totales) > 0
+                # Generar reportes HTML
                 tokens_para_reporte = [] if hay_errores else tokens_list
                 html_gen.generar_reporte_tokens(tokens_para_reporte)
-                html_gen.generar_reporte_errores(errores_totales)
+                html_gen.generar_reporte_errores(errores_para_mostrar)
                 html_gen.generar_reporte_simbolos(ast, codigo)
-                html_gen.generar_index(hay_errores=hay_errores)
+
+                if not hay_errores and code_3d_str:
+                    html_gen.generar_reporte_codigo(code_3d_str, cpp_code)
+
+                html_gen.generar_index(
+                    hay_errores=hay_errores,
+                    hay_codigo=not hay_errores
+                )
 
             except Exception as e:
                 self.after(0, lambda: messagebox.showerror("Error", str(e)))
@@ -381,7 +398,7 @@ class PitCodeApp(ctk.CTk):
         self._actualizar_tokens()
         self._actualizar_errores()
 
-        hay_errores = len(self.errores_list) > 0
+        hay_errores = getattr(self, '_hay_errores_reales', False)
 
         if hay_errores:
             self.btn_tokens.configure(state="disabled")
@@ -394,22 +411,36 @@ class PitCodeApp(ctk.CTk):
             self.btn_browser.configure(state="normal")
 
         total_errores = len(self.errores_list)
-        if total_errores == 0:
-            self._set_status(f"Analisis completado. {len(self.tokens_list)} tokens. Sin errores.")
+        if hay_errores:
+            self._set_status(
+                f"Analisis completado. {total_errores} error(es). "
+                f"Tokens y código no disponibles."
+            )
+        elif total_errores > 0:
+            # Solo advertencias, no errores reales
+            self._set_status(
+                f"Analisis completado. {len(self.tokens_list)} tokens. "
+                f"Código C++ generado. {total_errores} advertencia(s)."
+            )
         else:
-            self._set_status(f"Analisis completado. {total_errores} error(es) encontrado(s). Tokens no disponibles.")
+            self._set_status(
+                f"Analisis completado. {len(self.tokens_list)} tokens. "
+                f"Sin errores. Código C++ generado."
+            )
 
     def _actualizar_tokens(self):
-        RESERVADAS = ['LAP','SPLIT','PITBOARD','YELLOW_FLAG','RADIO',
-                      'STRATEGY_CHECK','STAY_OUT','PUSH','BOX','FORMATION_LAP',
-                      'GAP_CHECK','SECTOR','NO_DATA','BOX_BOX','DRS','PITWALL',
-                      'STRATEGY','PODIO','NEUTRO','RACE_START',
-                      'BROADCAST','TELEMETRY','DNF','VSC',
-                      'PADDOCK','RED_FLAG','BLUE_FLAG','BLACK_FLAG',
-                      'CHECKERED_FLAG','GREEN_LIGHT','RED_LIGHT']
-        LITERALES  = ['INT_LITERAL','FLOAT_LITERAL','STRING_LITERAL','CHAR_LITERAL']
+        RESERVADAS = [
+            'LAP','SPLIT','PITBOARD','YELLOW_FLAG','RADIO',
+            'STRATEGY_CHECK','STAY_OUT','PUSH','BOX','FORMATION_LAP',
+            'GAP_CHECK','SECTOR','NO_DATA','BOX_BOX','DRS','PITWALL',
+            'STRATEGY','PODIO','NEUTRO','RACE_START',
+            'BROADCAST','TELEMETRY','DNF','VSC',
+            'PADDOCK','RED_FLAG','BLUE_FLAG','BLACK_FLAG',
+            'CHECKERED_FLAG','GREEN_LIGHT','RED_LIGHT'
+        ]
+        LITERALES = ['INT_LITERAL','FLOAT_LITERAL','STRING_LITERAL','CHAR_LITERAL']
 
-        hay_errores = len(self.errores_list) > 0
+        hay_errores = getattr(self, '_hay_errores_reales', False)
 
         self.txt_tokens.configure(state="normal")
         self.txt_tokens.delete("0.0", "end")
@@ -443,16 +474,19 @@ class PitCodeApp(ctk.CTk):
         self.txt_tokens.configure(state="disabled")
 
     def _actualizar_errores(self):
-        errores_lexicos = [e for e in self.errores_list if e.get('type') == 'Léxico']
-        errores_sint    = [e for e in self.errores_list if e.get('type') == 'Sintáctico']
+        errores_lex  = [e for e in self.errores_list if e.get('type') == 'Léxico']
+        errores_syn  = [e for e in self.errores_list if e.get('type') == 'Sintáctico']
+        errores_sem  = [e for e in self.errores_list if e.get('type') in ('Semántico', 'Advertencia')]
 
         total       = len(self.errores_list)
-        lexicos     = len(errores_lexicos)
-        sintacticos = len(errores_sint)
+        lexicos     = len(errores_lex)
+        sintacticos = len(errores_syn)
+        semanticos  = len(errores_sem)
 
         self.lbl_total_errores.configure(text=f"Total: {total}")
         self.lbl_lexicos.configure(text=f"Lexicos: {lexicos}")
         self.lbl_sintacticos.configure(text=f"Sintacticos: {sintacticos}")
+        self.lbl_semanticos.configure(text=f"Semanticos: {semanticos}")
 
         self.txt_errores.configure(state="normal")
         self.txt_errores.delete("0.0", "end")
@@ -460,8 +494,8 @@ class PitCodeApp(ctk.CTk):
         if total == 0:
             self.txt_errores.insert("end", "Sin errores. Codigo PitCode valido.\n")
         else:
-            header = f"{'#':<5} {'TIPO':<15} {'MENSAJE':<45} {'LINEA':<8} {'COL'}\n"
-            header += "-" * 80 + "\n"
+            header = f"{'#':<5} {'TIPO':<15} {'MENSAJE':<50} {'LINEA':<8} {'COL'}\n"
+            header += "-" * 85 + "\n"
             self.txt_errores.insert("end", header)
 
             for i, e in enumerate(self.errores_list, 1):
@@ -469,13 +503,14 @@ class PitCodeApp(ctk.CTk):
                 mensaje = e.get('message', str(e))
                 linea   = e.get('line', 0)
                 col     = e.get('column', 0)
-                fila    = f"{i:<5} {tipo:<15} {mensaje:<45} {linea:<8} {col}\n"
+                fila    = f"{i:<5} {tipo:<15} {mensaje:<50} {linea:<8} {col}\n"
                 self.txt_errores.insert("end", fila)
 
         self.txt_errores.configure(state="disabled")
 
     def _mostrar_tab(self, tab):
-        if tab == "tokens" and len(self.errores_list) > 0:
+        hay_errores = getattr(self, '_hay_errores_reales', False)
+        if tab == "tokens" and hay_errores:
             messagebox.showinfo(
                 "Tokens no disponibles",
                 "No se pueden mostrar tokens porque se encontraron errores.\n"
@@ -483,7 +518,7 @@ class PitCodeApp(ctk.CTk):
             )
             return
 
-        tabs = { "tokens": "Tokens", "errores": "Errores" }
+        tabs = {"tokens": "Tokens", "errores": "Errores"}
         self.tabview.set(tabs[tab])
 
     def _abrir_navegador(self):
@@ -495,6 +530,10 @@ class PitCodeApp(ctk.CTk):
     def _set_status(self, mensaje):
         self.lbl_status.configure(text=mensaje)
 
+
+# ─────────────────────────────────────────────
+#  PUNTO DE ENTRADA
+# ─────────────────────────────────────────────
 if __name__ == "__main__":
     app = PitCodeApp()
     app.mainloop()
