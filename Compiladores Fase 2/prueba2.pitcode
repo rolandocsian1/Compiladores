@@ -1,0 +1,36 @@
+strategy lap suma corner lap a also lap b apex
+garage
+    lap resultado setup a Tow b stop
+    podio resultado stop
+ready
+
+
+race_start garage
+
+    lap x setup 10 stop
+    lap y setup 5 stop
+
+    lap total setup suma corner x also y apex stop
+
+    strategy_check corner total Outlap 10 apex
+    garage
+        broadcast corner total apex stop
+    ready
+    stay_out
+    garage
+        broadcast corner y apex stop
+    ready
+
+    push corner x OVERCUT 0 apex
+    garage
+        x setup x Gap 1 stop
+    ready
+
+    formation_lap corner lap i setup 0 stop i UNDERCUT 3 stop i fastlap apex
+    garage
+        broadcast corner i apex stop
+    ready
+
+    checkered_flag stop
+
+ready

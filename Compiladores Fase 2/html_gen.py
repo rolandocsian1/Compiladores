@@ -75,10 +75,18 @@ def _get_sugerencia(error):
 
     if err_type == 'Sintáctico':
         if token == 'EOF':
-            return 'Verifique que todos los bloques garage...ready estén cerrados'
+            cierre = SUGERENCIAS.get('READY')
+            apertura = SUGERENCIAS.get('GARAGE')
+
+            if cierre and apertura:
+                return f"Falta cerrar bloque: {apertura[0]} → {apertura[1]} ... {cierre[0]} → {cierre[1]}"
+            else:
+                return "Falta cerrar bloque con 'ready'"
+
         info = SUGERENCIAS.get(token)
         if info:
             return f"{info[0]} → {info[1]}"
+
         palabras = {
             'true':'Use green_light','false':'Use red_light',
             'if':'Use strategy_check','else':'Use stay_out',
@@ -89,8 +97,10 @@ def _get_sugerencia(error):
             'switch':'Use pitwall','void':'Use neutro','null':'Use dnf',
             'print':'Use broadcast','main':'Use race_start','const':'Use vsc',
         }
+
         if value in palabras:
             return palabras[value]
+
         return f"Revise la sintaxis cerca de '{value}'"
 
     if err_type == 'Semántico' or err_type == 'Advertencia':
@@ -193,7 +203,20 @@ def generar_reporte_tokens(tokens_list):
         cat = get_cat(t['token'])
         bg, fg = CAT_COLORS.get(cat, ('#444','#ccc'))
         badge = f'<span style="background:{bg};color:{fg};padding:2px 8px;border-radius:3px;font-size:0.75rem;font-weight:bold">{cat}</span>'
-        rows += f'<tr data-cat="{cat}"><td class="tag-token">{t["token"]}</td><td class="tag-lexeme">{t["lexeme"]}</td><td>{badge}</td><td class="tag-line">{t["line"]}</td><td class="tag-line">{t["column"]}</td></tr>'
+        # Obtener significado real del token
+        info = SUGERENCIAS.get(t["token"], None)
+        igualdad = info[1] if info else ""
+
+        rows += f'''
+        <tr data-cat="{cat}">
+            <td class="tag-token">{t["token"]}</td>
+            <td class="tag-lexeme">{t["lexeme"]}</td>
+            <td style="color:#ffd54f;font-family:monospace">{igualdad}</td>
+            <td>{badge}</td>
+            <td class="tag-line">{t["line"]}</td>
+            <td class="tag-line">{t["column"]}</td>
+        </tr>
+        '''
 
     total = len(tokens_list)
     html = f"""<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>PitCode - Tokens</title>
@@ -205,7 +228,7 @@ def generar_reporte_tokens(tokens_list):
 <h2>Tokens <span style="background:#2e7d32;color:white;padding:2px 10px;border-radius:4px;font-size:0.8rem">{total}</span></h2>
 <input class="search-box" type="text" id="sb" placeholder="Buscar..." onkeyup="ff()">
 <div class="filter-bar"><button class="filter-btn active" onclick="fc('',this)">Todos</button><button class="filter-btn" onclick="fc('Palabra Reservada',this)">Reservadas</button><button class="filter-btn" onclick="fc('Operador',this)">Operadores</button><button class="filter-btn" onclick="fc('Literal',this)">Literales</button><button class="filter-btn" onclick="fc('Identificador',this)">Identificadores</button><button class="filter-btn" onclick="fc('Delimitador',this)">Delimitadores</button></div>
-<table id="tt"><thead><tr><th>Token</th><th>Lexema</th><th>Categoría</th><th>Línea</th><th>Columna</th></tr></thead><tbody>{rows}</tbody></table>
+<table id="tt"><thead><tr><th>Token</th><th>Lexema</th><th>Significado</th><th>Categoría</th><th>Línea</th><th>Columna</th></tr></thead><tbody>{rows}</tbody></table>
 <script>let cc='';function fc(c,b){{cc=c;document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');af()}}function ff(){{af()}}function af(){{const s=document.getElementById('sb').value.toLowerCase();document.querySelectorAll('#tt tbody tr').forEach(r=>{{r.style.display=(!cc||r.dataset.cat===cc)&&(!s||r.innerText.toLowerCase().includes(s))?'':'none'}})}}</script>
 <footer>PitCode Compiler &middot; Compiladores 2026</footer></body></html>"""
     with open(os.path.join(REPORTS_DIR, "reporte_tokens.html"), "w", encoding="utf-8") as f:
@@ -263,10 +286,11 @@ def generar_reporte_simbolos(ast, source_code):
     def exit_scope():
         if len(scopes) > 1: scopes.pop(); scope_names.pop()
 
-    def insert(name, dtype, role, line, lexpos):
+    def insert(name, dtype, role, line, lexpos, value=None):
         line_start = source_code.rfind('\n', 0, lexpos) + 1
         col = (lexpos - line_start) + 1 if lexpos > 0 else 0
-        entry = {'name':name,'type':dtype,'role':role,'scope':current_scope(),'line':line,'column':col}
+
+        entry = {'name':name,'type':dtype,'role':role,'scope':current_scope(),'line':line,'column':col, 'value': value}
         scopes[-1][name] = entry; all_symbols.append(entry)
 
     def walk(node):
@@ -284,8 +308,18 @@ def generar_reporte_simbolos(ast, source_code):
         elif kind == 'race_start':
             for item in node[1]: walk(item)
         elif kind in ('declare','declare_const'):
-            insert(node[2], node[1], 'variable', node[4] if len(node)>4 else 0, node[5] if len(node)>5 else 0)
-            if node[3]: walk(node[3])
+            value = None
+
+            if node[3]:
+                if isinstance(node[3], tuple) and node[3][0] == 'literal':
+                    value = node[3][1]
+                else:
+                    value = 'expresión'
+
+            insert(node[2], node[1], 'variable', node[4] if len(node)>4 else 0, node[5] if len(node)>5 else 0, value)
+
+            if node[3]: 
+                walk(node[3])
         elif kind == 'block':
             for item in node[1]: walk(item)
         elif kind in ('if','if_else'):
@@ -313,7 +347,21 @@ def generar_reporte_simbolos(ast, source_code):
             if len(node)>1 and node[1]: walk(node[1])
         elif kind == 'binop': walk(node[2]); walk(node[3])
         elif kind in ('uminus','not'): walk(node[1])
-        elif kind == 'assign': walk(node[2])
+        elif kind == 'assign': 
+            var_name = node[1]
+            value = None
+
+            if isinstance(node[2], tuple) and node[2][0] == 'literal':
+                value = node[2][1]
+            else:
+                value = 'expresion'
+
+            for scope in reversed(scopes):
+                if var_name in scope:
+                    scope[var_name]['value'] = value
+                    break
+
+            walk(node[2])
         elif kind == 'call':
             for arg in node[2]: walk(arg)
 
@@ -321,16 +369,27 @@ def generar_reporte_simbolos(ast, source_code):
 
     rows = ""
     for s in all_symbols:
-        rows += f'<tr><td style="color:#a5d6a7;font-family:monospace">{s["name"]}</td><td style="color:#ce93d8">{s["type"]}</td><td style="color:#ffcc80">{s["role"]}</td><td style="color:#80deea">{s["scope"]}</td><td style="color:#888;font-family:monospace">{s["line"]}</td><td style="color:#888;font-family:monospace">{s["column"]}</td></tr>'
+        rows += f"""
+        <tr>
+            <td style="color:#a5d6a7;font-family:monospace">{s.get("name","-")}</td>
+            <td style="color:#ce93d8">{s.get("type","-")}</td>
+            <td style="color:#ffcc80">{s.get("role","-")}</td>
+            <td style="color:#80deea">{s.get("scope","-")}</td>
+            <td style="color:#ffd54f">{s.get("value","-")}</td>
+            <td style="color:#888;font-family:monospace">{s.get("line","-")}</td>
+            <td style="color:#888;font-family:monospace">{s.get("column","-")}</td>
+        </tr>
+    
+        """
     if not rows:
-        rows = '<tr><td colspan="6" style="text-align:center;color:#666">Sin símbolos registrados</td></tr>'
+        rows = '<tr><td colspan="7" style="text-align:center;color:#666">Sin símbolos registrados</td></tr>'
 
     html = f"""<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>PitCode - Símbolos</title>
 <style>*{{box-sizing:border-box;margin:0;padding:0}}body{{font-family:'Segoe UI',sans-serif;background:#0f0f0f;color:#e0e0e0;padding:30px}}h1{{font-size:2rem;color:#e10600;border-bottom:3px solid #e10600;padding-bottom:10px;margin-bottom:25px}}.nav{{margin-bottom:20px}}.nav a{{color:#569cd6;text-decoration:none;font-size:13px}}.summary{{background:#1a1a1a;border-left:4px solid #e10600;padding:12px 18px;margin-bottom:20px;border-radius:0 6px 6px 0;font-size:0.9rem;color:#bbb}}table{{width:100%;border-collapse:collapse;font-size:0.9rem}}th{{background:#e10600;color:white;padding:10px 14px;text-align:left;font-size:0.8rem;text-transform:uppercase}}td{{padding:8px 14px;border-bottom:1px solid #2a2a2a}}tr:nth-child(even) td{{background:#1a1a1a}}tr:hover td{{background:#222}}footer{{margin-top:40px;color:#444;font-size:0.8rem;text-align:center}}</style></head><body>
 <div class="nav"><a href="index.html">&larr; Volver al inicio</a></div>
 <h1>PitCode &mdash; Tabla de Símbolos</h1>
 <div class="summary">Símbolos: <strong>{len(all_symbols)}</strong></div>
-<table><thead><tr><th>Nombre</th><th>Tipo</th><th>Rol</th><th>Ámbito</th><th>Línea</th><th>Columna</th></tr></thead><tbody>{rows}</tbody></table>
+<table><thead><tr><th>Nombre</th><th>Tipo</th><th>Rol</th><th>Ámbito</th><th>Valor</th><th>Línea</th><th>Columna</th></tr></thead><tbody>{rows}</tbody></table>
 <footer>PitCode Compiler &middot; Compiladores 2026</footer></body></html>"""
     with open(os.path.join(REPORTS_DIR, "reporte_simbolos.html"), "w", encoding="utf-8") as f:
         f.write(html)
