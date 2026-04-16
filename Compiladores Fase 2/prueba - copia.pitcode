@@ -1,0 +1,11 @@
+lap_note Conteo basico de vueltas
+
+race_start garage
+    lap limite setup 3 stop
+    
+    formation_lap corner lap i setup 0 stop i UNDERCUT limite stop i fastlap apex garage
+        broadcast corner transmission Vuelta completada transmission apex stop
+    ready
+    
+    checkered_flag stop
+ready

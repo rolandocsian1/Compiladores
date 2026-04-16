@@ -1,0 +1,21 @@
+lap_note Ejemplo de Errores LEXICOS - PitCode
+lap_note Contiene caracteres no reconocidos por el lenguaje
+
+race_start garage
+
+    lap_note ERROR 1: Simbolo $ no pertenece al lenguaje
+    lap precio setup 100$ stop
+
+    lap_note ERROR 2: Simbolo % no pertenece al lenguaje
+    split porcentaje setup 3.14% stop
+
+    lap_note ERROR 3: Backtick no pertenece al lenguaje
+    lap z setup 5 stop
+    broadcast corner `z apex stop
+
+    lap_note Las demas lineas son validas y el lexer se recupera
+    lap normal setup 42 stop
+    broadcast corner normal apex stop
+
+    checkered_flag stop
+ready

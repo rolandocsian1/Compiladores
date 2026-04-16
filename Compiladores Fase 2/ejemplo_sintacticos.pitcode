@@ -1,0 +1,21 @@
+lap_note Ejemplo de Errores SINTACTICOS - PitCode
+lap_note El lenguaje reconoce los tokens pero la estructura es incorrecta
+
+race_start garage
+
+    lap_note ERROR 1: Falta el nombre de variable (lap setup ...)
+    lap setup 10 stop
+
+    lap_note ERROR 2: Falta keyword 'setup' en declaracion (split 3.14 stop)
+    split 3.14 stop
+
+    lap_note ERROR 3: Falta 'stop' al final de la declaracion
+    lap z setup 99
+
+    lap_note ERROR 4: El for le falta 'stop' en la condicion
+    formation_lap corner lap i setup 0 stop i UNDERCUT 5 apex garage
+        broadcast corner z apex stop
+    ready
+
+    checkered_flag stop
+ready

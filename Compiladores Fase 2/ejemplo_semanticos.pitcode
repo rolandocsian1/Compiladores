@@ -1,0 +1,24 @@
+lap_note Ejemplo de Errores SEMANTICOS - PitCode
+lap_note La estructura es valida pero la logica es incorrecta
+
+strategy lap multiplicar corner lap a also lap b apex garage
+    podio a stop
+ready
+
+race_start garage
+
+    lap_note ERROR 1: Variable 'x' declarada dos veces en el mismo ambito
+    lap x setup 10 stop
+    lap x setup 20 stop
+
+    lap_note ERROR 2: Variable 'z' usada sin haber sido declarada
+    z setup 5 stop
+
+    lap_note ERROR 3: Tipo incompatible - asignar cadena a decimal (split)
+    split w setup transmission hola mundo transmission stop
+
+    lap_note ERROR 4: Funcion 'multiplicar' espera 2 args, se le pasan 3
+    lap resultado setup multiplicar corner 1 also 2 also 99 apex stop
+
+    checkered_flag stop
+ready
