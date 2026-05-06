@@ -13,7 +13,7 @@ import html_gen
 from lexer import analyze as analizar_codigo
 from parser import parse as analizar_sintaxis
 from semantic import SemanticAnalyzer
-from codegen import ThreeAddressGenerator, CppTranslator
+from codegen import ThreeAddressGenerator
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -354,21 +354,21 @@ class PitCodeApp(ctk.CTk):
 
                 # ── Fase 2: Generación de código (solo si NO hay errores reales) ──
                 code_3d_str = ""
-                cpp_code = ""
 
                 if not hay_errores and ast:
-                    # Código de tres direcciones
+                    # Código de tres direcciones (es C++ compilable)
                     gen = ThreeAddressGenerator()
                     gen.generate(ast)
                     code_3d_str = gen.get_code_string()
 
-                    # Traducción a C++
-                    translator = CppTranslator()
+                    # Guardar como archivo .cpp
                     reports_dir = os.path.join(
                         os.path.dirname(os.path.abspath(__file__)), "reports"
                     )
+                    os.makedirs(reports_dir, exist_ok=True)
                     cpp_path = os.path.join(reports_dir, "output.cpp")
-                    cpp_code = translator.save_to_file(ast, cpp_path)
+                    with open(cpp_path, 'w', encoding='utf-8') as f:
+                        f.write(code_3d_str)
 
                 # Actualizar UI
                 self.after(0, self._actualizar_ui)
@@ -380,7 +380,7 @@ class PitCodeApp(ctk.CTk):
                 html_gen.generar_reporte_simbolos(ast, codigo)
 
                 if not hay_errores and code_3d_str:
-                    html_gen.generar_reporte_codigo(code_3d_str, cpp_code)
+                    html_gen.generar_reporte_codigo(code_3d_str)
 
                 html_gen.generar_index(
                     hay_errores=hay_errores,

@@ -93,7 +93,7 @@ def _get_sugerencia(error):
             return palabras[value]
         return f"Revise la sintaxis cerca de '{value}'"
 
-    if err_type == 'Semántico' or err_type == 'Advertencia':
+    if err_type in ('Semántico', 'Advertencia'):
         return 'Verifique tipos de datos y declaraciones'
 
     return ''
@@ -115,7 +115,7 @@ def generar_index(hay_errores=False, hay_codigo=False):
         boton_codigo = """<span style="display:inline-block;padding:15px 30px;background-color:#3a3a3a;color:#666;border-radius:3px;font-weight:bold;border:1px solid #555;cursor:not-allowed;">Código Generado (no disponible)</span>"""
     else:
         boton_tokens = '<a href="reporte_tokens.html">Bitacora de Tokens</a>'
-        boton_codigo = '<a href="reporte_codigo.html">Código 3D / C++</a>' if hay_codigo else '<a href="reporte_codigo.html">Código 3D / C++</a>'
+        boton_codigo = '<a href="reporte_codigo.html">Código 3D / C++</a>'
 
     html = f"""<!DOCTYPE html>
 <html lang="es">
@@ -213,7 +213,7 @@ def generar_reporte_tokens(tokens_list):
 
 
 # ─────────────────────────────────────────────
-#  REPORTE DE ERRORES (léxicos + sintácticos + semánticos)
+#  REPORTE DE ERRORES
 # ─────────────────────────────────────────────
 
 def generar_reporte_errores(errores_list):
@@ -252,110 +252,344 @@ def generar_reporte_errores(errores_list):
 
 # ─────────────────────────────────────────────
 #  REPORTE DE TABLA DE SÍMBOLOS
+#  Basado en la clase SymbolTable del proyecto
+#  original: (nombre, ambito) como clave,
+#  campos: tipo, valor, linea, columna, ambito,
+#  modificable, usado, parametros, retorno
 # ─────────────────────────────────────────────
 
 def generar_reporte_simbolos(ast, source_code):
     _ensure_reports()
-    scopes = [{}]; scope_names = ['global']; all_symbols = []
 
-    def current_scope(): return scope_names[-1]
-    def enter_scope(name): scopes.append({}); scope_names.append(name)
-    def exit_scope():
-        if len(scopes) > 1: scopes.pop(); scope_names.pop()
+    # ── Tabla de símbolos: (nombre, ambito) -> metadata ──
+    tabla_simbolos = {}
+    errors = []
+    scopes = ['global']
+    _local_counter = [0]
+    _function_scope = [None]
+    insertion_order = []
 
-    def insert(name, dtype, role, line, lexpos):
+    def entrar_ambito(tipo="bloque"):
+        _local_counter[0] += 1
+        if tipo == "funcion":
+            amb = f"funcion#{_local_counter[0]}"
+            _function_scope[0] = amb
+        else:
+            amb = f"{tipo}#{_local_counter[0]}"
+        scopes.append(amb)
+        return amb
+
+    def salir_ambito():
+        if len(scopes) > 1:
+            out = scopes.pop()
+            if out.startswith("funcion#"):
+                _function_scope[0] = None
+
+    def obtener_ambito():
+        return scopes[-1]
+
+    def get_col(lexpos):
+        if lexpos <= 0:
+            return 0
         line_start = source_code.rfind('\n', 0, lexpos) + 1
-        col = (lexpos - line_start) + 1 if lexpos > 0 else 0
-        entry = {'name':name,'type':dtype,'role':role,'scope':current_scope(),'line':line,'column':col}
-        scopes[-1][name] = entry; all_symbols.append(entry)
+        return (lexpos - line_start) + 1
+
+    def agregar_simbolo(nombre, tipo, valor_original, linea, columna,
+                        modificable=True, parametros=None, retorno=None):
+        amb = obtener_ambito()
+        key = (nombre, amb)
+        if key in tabla_simbolos:
+            errors.append(f"'{nombre}' ya declarado en {amb}")
+            return False
+        tabla_simbolos[key] = {
+            'tipo': tipo,
+            'valor_original': valor_original,
+            'valor': None,
+            'linea': linea,
+            'columna': columna,
+            'ambito': amb,
+            'modificable': modificable,
+            'usado': False,
+            'parametros': parametros or [],
+            'retorno': retorno
+        }
+        insertion_order.append(key)
+        return True
+
+    def buscar_simbolo(nombre):
+        for amb in reversed(scopes):
+            key = (nombre, amb)
+            if key in tabla_simbolos:
+                tabla_simbolos[key]['usado'] = True
+                return tabla_simbolos[key]
+        return None
+
+    def actualizar_simbolo(nombre, valor):
+        for amb in reversed(scopes):
+            key = (nombre, amb)
+            if key in tabla_simbolos:
+                tabla_simbolos[key]['valor'] = valor
+                tabla_simbolos[key]['usado'] = True
+                return True
+        return False
+
+    def expr_to_str(node):
+        if node is None: return None
+        if not isinstance(node, tuple): return str(node)
+        kind = node[0]
+        if kind == 'int': return str(node[1])
+        if kind == 'float': return str(node[1])
+        if kind == 'string': return f'"{node[1]}"'
+        if kind == 'char': return f"'{node[1]}'"
+        if kind == 'bool': return 'green_light' if node[1] else 'red_light'
+        if kind == 'null': return 'dnf'
+        if kind == 'id': return node[1]
+        if kind == 'binop':
+            ops = {'Tow':'+','Gap':'-','ERS':'*','Stint':'/','Fuel_Delta':'%',
+                   'DEAD_HEAT':'==','UNDERCUT':'<','OVERCUT':'!=','Outlap':'>',
+                   'undereq':'<=','overeq':'>=','safety':'&&','overtake':'||'}
+            op = ops.get(node[1], node[1])
+            return f"{expr_to_str(node[2])} {op} {expr_to_str(node[3])}"
+        if kind == 'call':
+            args = ", ".join(expr_to_str(a) for a in node[2])
+            return f"{node[1]}({args})"
+        if kind == 'uminus': return f"-{expr_to_str(node[1])}"
+        if kind == 'not': return f"!{expr_to_str(node[1])}"
+        return str(node)
+
+    # ── Recorrido del AST ──
 
     def walk(node):
         if not isinstance(node, tuple): return
         kind = node[0]
+
         if kind == 'program':
             for f in node[1]: walk(f)
             walk(node[2])
             for f in node[3]: walk(f)
+
         elif kind == 'func_def':
-            insert(node[2], node[1], 'función', node[5] if len(node)>5 else 0, node[6] if len(node)>6 else 0)
-            enter_scope(node[2])
-            for p in node[3]: insert(p[2], p[1], 'parámetro', p[3] if len(p)>3 else 0, p[4] if len(p)>4 else 0)
-            walk(node[4]); exit_scope()
+            fname, ftype = node[2], node[1]
+            fline = node[5] if len(node) > 5 else 0
+            fcol = get_col(node[6] if len(node) > 6 else 0)
+            params_list = [(p[1], p[2]) for p in node[3]]
+            agregar_simbolo(fname, 'funcion', None, fline, fcol,
+                          modificable=False, parametros=params_list, retorno=ftype)
+            entrar_ambito("funcion")
+            for p in node[3]:
+                ptype, pname = p[1], p[2]
+                pline = p[3] if len(p) > 3 else 0
+                pcol = get_col(p[4] if len(p) > 4 else 0)
+                agregar_simbolo(pname, ptype, None, pline, pcol)
+            walk(node[4])
+            salir_ambito()
+
         elif kind == 'race_start':
+            entrar_ambito("race_start")
             for item in node[1]: walk(item)
-        elif kind in ('declare','declare_const'):
-            insert(node[2], node[1], 'variable', node[4] if len(node)>4 else 0, node[5] if len(node)>5 else 0)
-            if node[3]: walk(node[3])
+            salir_ambito()
+
+        elif kind == 'declare':
+            dtype, name, expr = node[1], node[2], node[3]
+            line = node[4] if len(node) > 4 else 0
+            col = get_col(node[5] if len(node) > 5 else 0)
+            agregar_simbolo(name, dtype, expr, line, col)
+            if expr:
+                val = expr_to_str(expr)
+                actualizar_simbolo(name, val)
+                walk(expr)
+
+        elif kind == 'declare_const':
+            dtype, name, expr = node[1], node[2], node[3]
+            line = node[4] if len(node) > 4 else 0
+            col = get_col(node[5] if len(node) > 5 else 0)
+            agregar_simbolo(name, dtype, expr, line, col, modificable=False)
+            if expr:
+                val = expr_to_str(expr)
+                actualizar_simbolo(name, val)
+                walk(expr)
+
+        elif kind == 'assign':
+            name, expr = node[1], node[2]
+            buscar_simbolo(name)
+            val = expr_to_str(expr)
+            actualizar_simbolo(name, val)
+            walk(expr)
+
+        elif kind == 'compound_assign':
+            op, name, expr = node[1], node[2], node[3]
+            sym = buscar_simbolo(name)
+            val = expr_to_str(expr)
+            ops = {'pitstow':'+=','pitgap':'-=','piters':'*=','pitstint':'/='}
+            op_str = ops.get(op, op)
+            old = sym['valor'] if sym and sym['valor'] else name
+            actualizar_simbolo(name, f"{old} {op_str} {val}")
+            walk(expr)
+
+        elif kind == 'increment':
+            sym = buscar_simbolo(node[1])
+            old = sym['valor'] if sym and sym['valor'] else node[1]
+            actualizar_simbolo(node[1], f"{old} + 1")
+
+        elif kind == 'decrement':
+            sym = buscar_simbolo(node[1])
+            old = sym['valor'] if sym and sym['valor'] else node[1]
+            actualizar_simbolo(node[1], f"{old} - 1")
+
         elif kind == 'block':
             for item in node[1]: walk(item)
-        elif kind in ('if','if_else'):
-            for child in node[1:]:
-                if child: walk(child)
+        elif kind == 'if':
+            walk(node[1]); entrar_ambito("if"); walk(node[2]); salir_ambito()
+        elif kind == 'if_else':
+            walk(node[1]); entrar_ambito("if"); walk(node[2]); salir_ambito()
+            entrar_ambito("else")
+            if node[3]: walk(node[3])
+            salir_ambito()
         elif kind == 'while':
-            walk(node[1]); enter_scope('while'); walk(node[2]); exit_scope()
+            walk(node[1]); entrar_ambito("while"); walk(node[2]); salir_ambito()
         elif kind == 'do_while':
-            enter_scope('do_while'); walk(node[1]); exit_scope(); walk(node[2])
+            entrar_ambito("do_while"); walk(node[1]); salir_ambito(); walk(node[2])
         elif kind == 'for':
-            enter_scope('for_loop')
+            entrar_ambito("for_loop")
             if node[1]: walk(node[1])
             if node[2]: walk(node[2])
             if node[3]: walk(node[3])
-            walk(node[4]); exit_scope()
+            walk(node[4]); salir_ambito()
         elif kind == 'switch':
-            walk(node[1])
+            walk(node[1]); entrar_ambito("switch")
             for c in node[2]: walk(c)
-        elif kind in ('case','default'):
+            salir_ambito()
+        elif kind in ('case', 'default'):
             for child in node[1:]:
                 if isinstance(child, list):
                     for item in child: walk(item)
                 elif child: walk(child)
-        elif kind in ('return','broadcast','expr_stmt'):
-            if len(node)>1 and node[1]: walk(node[1])
-        elif kind == 'binop': walk(node[2]); walk(node[3])
-        elif kind in ('uminus','not'): walk(node[1])
-        elif kind == 'assign': walk(node[2])
+        elif kind in ('return', 'broadcast', 'expr_stmt'):
+            if len(node) > 1 and node[1]:
+                if isinstance(node[1], tuple) and node[1][0] == 'id':
+                    buscar_simbolo(node[1][1])
+                walk(node[1])
+        elif kind == 'telemetry':
+            buscar_simbolo(node[1])
+            actualizar_simbolo(node[1], 'entrada usuario')
+        elif kind == 'binop':
+            walk(node[2]); walk(node[3])
+        elif kind in ('uminus', 'not'):
+            walk(node[1])
         elif kind == 'call':
+            buscar_simbolo(node[1])
             for arg in node[2]: walk(arg)
+        elif kind == 'id':
+            buscar_simbolo(node[1])
 
     if ast: walk(ast)
 
-    rows = ""
-    for s in all_symbols:
-        rows += f'<tr><td style="color:#a5d6a7;font-family:monospace">{s["name"]}</td><td style="color:#ce93d8">{s["type"]}</td><td style="color:#ffcc80">{s["role"]}</td><td style="color:#80deea">{s["scope"]}</td><td style="color:#888;font-family:monospace">{s["line"]}</td><td style="color:#888;font-family:monospace">{s["column"]}</td></tr>'
-    if not rows:
-        rows = '<tr><td colspan="6" style="text-align:center;color:#666">Sin símbolos registrados</td></tr>'
+    # ── Generar HTML ──
+    # Mapeo de tipos PitCode a C++
+    TIPO_CPP = {
+        'lap': 'int', 'split': 'double', 'pitboard': 'char',
+        'yellow_flag': 'bool', 'radio': 'std::string',
+        'neutro': 'void', 'funcion': 'function',
+    }
 
-    html = f"""<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>PitCode - Símbolos</title>
-<style>*{{box-sizing:border-box;margin:0;padding:0}}body{{font-family:'Segoe UI',sans-serif;background:#0f0f0f;color:#e0e0e0;padding:30px}}h1{{font-size:2rem;color:#e10600;border-bottom:3px solid #e10600;padding-bottom:10px;margin-bottom:25px}}.nav{{margin-bottom:20px}}.nav a{{color:#569cd6;text-decoration:none;font-size:13px}}.summary{{background:#1a1a1a;border-left:4px solid #e10600;padding:12px 18px;margin-bottom:20px;border-radius:0 6px 6px 0;font-size:0.9rem;color:#bbb}}table{{width:100%;border-collapse:collapse;font-size:0.9rem}}th{{background:#e10600;color:white;padding:10px 14px;text-align:left;font-size:0.8rem;text-transform:uppercase}}td{{padding:8px 14px;border-bottom:1px solid #2a2a2a}}tr:nth-child(even) td{{background:#1a1a1a}}tr:hover td{{background:#222}}footer{{margin-top:40px;color:#444;font-size:0.8rem;text-align:center}}</style></head><body>
-<div class="nav"><a href="index.html">&larr; Volver al inicio</a></div>
-<h1>PitCode &mdash; Tabla de Símbolos</h1>
-<div class="summary">Símbolos: <strong>{len(all_symbols)}</strong></div>
-<table><thead><tr><th>Nombre</th><th>Tipo</th><th>Rol</th><th>Ámbito</th><th>Línea</th><th>Columna</th></tr></thead><tbody>{rows}</tbody></table>
-<footer>PitCode Compiler &middot; Compiladores 2026</footer></body></html>"""
+    rows = ""
+    for key in insertion_order:
+        if key not in tabla_simbolos: continue
+        nombre, amb = key
+        m = tabla_simbolos[key]
+        valor_display = m['valor'] if m['valor'] is not None else "Sin inicializar"
+        usado_display = '<span style="color:#a5d6a7">Si</span>' if m['usado'] else '<span style="color:#ef9a9a">No</span>'
+        mod_display = '<span style="color:#a5d6a7">Si</span>' if m['modificable'] else '<span style="color:#ffcc80">No</span>'
+
+        # Equivalente C++
+        tipo_cpp = TIPO_CPP.get(m['tipo'], m['tipo'])
+        if m['tipo'] == 'funcion' and m['retorno']:
+            ret_cpp = TIPO_CPP.get(m['retorno'], m['retorno'])
+            params_cpp = ", ".join(TIPO_CPP.get(pt, pt) for pt, pn in m['parametros'])
+            equiv_cpp = f"{ret_cpp} {nombre}({params_cpp})"
+        elif m['modificable'] is False and m['tipo'] != 'funcion':
+            equiv_cpp = f"const {tipo_cpp} {nombre}"
+        else:
+            equiv_cpp = f"{tipo_cpp} {nombre}"
+
+        rows += f'''<tr>
+            <td style="color:#a5d6a7;font-family:monospace;font-weight:bold">{nombre}</td>
+            <td style="color:#ce93d8">{m['tipo']}</td>
+            <td style="color:#4fc3f7;font-family:monospace">{equiv_cpp}</td>
+            <td style="color:#80deea">{amb}</td>
+            <td style="color:#e0e0e0;font-family:monospace">{valor_display}</td>
+            <td>{mod_display}</td>
+            <td>{usado_display}</td>
+            <td style="color:#888;font-family:monospace">{m['linea']}</td>
+            <td style="color:#888;font-family:monospace">{m['columna']}</td>
+        </tr>'''
+    if not rows:
+        rows = '<tr><td colspan="9" style="text-align:center;color:#666">Sin simbolos registrados</td></tr>'
+
+    html = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>PitCode - Tabla de Simbolos</title>
+  <style>
+    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    body {{ font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; padding: 30px; }}
+    h1 {{ font-size: 2rem; color: #e10600; border-bottom: 3px solid #e10600; padding-bottom: 10px; margin-bottom: 25px; }}
+    .nav {{ margin-bottom: 20px; }}
+    .nav a {{ color: #569cd6; text-decoration: none; font-size: 13px; }}
+    .summary {{ background: #1a1a1a; border-left: 4px solid #e10600; padding: 12px 18px; margin-bottom: 20px; border-radius: 0 6px 6px 0; font-size: 0.9rem; color: #bbb; }}
+    table {{ width: 100%; border-collapse: collapse; font-size: 0.9rem; }}
+    th {{ background: #e10600; color: white; padding: 10px 14px; text-align: left; font-size: 0.8rem; text-transform: uppercase; }}
+    td {{ padding: 8px 14px; border-bottom: 1px solid #2a2a2a; }}
+    tr:nth-child(even) td {{ background: #1a1a1a; }}
+    tr:hover td {{ background: #222; }}
+    footer {{ margin-top: 40px; color: #444; font-size: 0.8rem; text-align: center; }}
+  </style>
+</head>
+<body>
+  <div class="nav"><a href="index.html">&larr; Volver al inicio</a></div>
+  <h1>PitCode &mdash; Tabla de Simbolos</h1>
+  <div class="summary">Simbolos registrados: <strong>{len(insertion_order)}</strong></div>
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th><th>Tipo PitCode</th><th>Equivalente C++</th><th>Ambito</th><th>Valor</th>
+        <th>Modificable</th><th>Usado</th><th>Linea</th><th>Columna</th>
+      </tr>
+    </thead>
+    <tbody>{rows}</tbody>
+  </table>
+  <footer>PitCode Compiler &middot; Compiladores 2026</footer>
+</body>
+</html>"""
+
     with open(os.path.join(REPORTS_DIR, "reporte_simbolos.html"), "w", encoding="utf-8") as f:
         f.write(html)
 
 
 # ─────────────────────────────────────────────
-#  REPORTE DE CÓDIGO 3D + C++
+#  REPORTE DE CÓDIGO 3D
 # ─────────────────────────────────────────────
 
-def generar_reporte_codigo(code_3d_str, cpp_code, cpp_filename="output.cpp"):
+def generar_reporte_codigo(code_3d_str, cpp_filename="output.cpp"):
     _ensure_reports()
 
+    def _escape(text):
+        return (text.replace('&', '&amp;')
+                    .replace('<', '&lt;')
+                    .replace('>', '&gt;'))
+
+    code_escaped = _escape(code_3d_str)
+    num_lines = code_3d_str.count('\n') + 1
+
     html = f"""<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>PitCode - Código Generado</title>
-<style>*{{box-sizing:border-box;margin:0;padding:0}}body{{font-family:'Segoe UI',sans-serif;background:#0f0f0f;color:#e0e0e0;padding:30px}}h1{{font-size:2rem;color:#e10600;border-bottom:3px solid #e10600;padding-bottom:10px;margin-bottom:25px}}h2{{font-size:1.2rem;color:#ff8c00;margin:30px 0 12px}}.nav{{margin-bottom:20px}}.nav a{{color:#569cd6;text-decoration:none;font-size:13px}}.code-block{{background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:16px 20px;font-family:Consolas,monospace;font-size:0.85rem;white-space:pre;overflow-x:auto;line-height:1.6;margin-bottom:20px}}.code-3d{{color:#4fc3f7}}.code-cpp{{color:#a5d6a7}}.summary{{background:#1a1a1a;border-left:4px solid #e10600;padding:12px 18px;margin-bottom:20px;border-radius:0 6px 6px 0;font-size:0.9rem;color:#bbb}}.badge{{display:inline-block;background:#2e7d32;color:white;border-radius:4px;padding:2px 10px;font-size:0.8rem;margin-left:8px}}.download{{display:inline-block;padding:8px 20px;background:#264f78;color:#d4d4d4;text-decoration:none;border-radius:4px;font-weight:bold;border:1px solid #569cd6;margin-top:10px}}.download:hover{{background:#094771;color:white}}footer{{margin-top:40px;color:#444;font-size:0.8rem;text-align:center}}</style></head><body>
+<style>*{{box-sizing:border-box;margin:0;padding:0}}body{{font-family:'Segoe UI',sans-serif;background:#0f0f0f;color:#e0e0e0;padding:30px}}h1{{font-size:2rem;color:#e10600;border-bottom:3px solid #e10600;padding-bottom:10px;margin-bottom:25px}}h2{{font-size:1.2rem;color:#ff8c00;margin:30px 0 12px}}.nav{{margin-bottom:20px}}.nav a{{color:#569cd6;text-decoration:none;font-size:13px}}.code-block{{background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:16px 20px;font-family:Consolas,monospace;font-size:0.85rem;white-space:pre;overflow-x:auto;line-height:1.6;margin-bottom:20px;color:#a5d6a7}}.summary{{background:#1a1a1a;border-left:4px solid #e10600;padding:12px 18px;margin-bottom:20px;border-radius:0 6px 6px 0;font-size:0.9rem;color:#bbb}}.badge{{display:inline-block;background:#2e7d32;color:white;border-radius:4px;padding:2px 10px;font-size:0.8rem;margin-left:8px}}.download{{display:inline-block;padding:8px 20px;background:#264f78;color:#d4d4d4;text-decoration:none;border-radius:4px;font-weight:bold;border:1px solid #569cd6;margin-top:10px}}.download:hover{{background:#094771;color:white}}footer{{margin-top:40px;color:#444;font-size:0.8rem;text-align:center}}</style></head><body>
 <div class="nav"><a href="index.html">&larr; Volver al inicio</a></div>
-<h1>PitCode &mdash; Código Generado</h1>
-<div class="summary">Código de tres direcciones e instrucciones &nbsp;|&nbsp; Traducción funcional a C++</div>
-
-<h2>Código de Tres Direcciones <span class="badge">{code_3d_str.count(chr(10)) + 1} instrucciones</span></h2>
-<div class="code-block code-3d">{code_3d_str}</div>
-
-<h2>Traducción a C++ <span class="badge">Funcional</span></h2>
-<div class="code-block code-cpp">{cpp_code}</div>
+<h1>PitCode &mdash; Código de Tres Direcciones</h1>
+<div class="summary">Código de tres direcciones generado &nbsp;|&nbsp; Compatible con C++ (compilable directamente)</div>
+<h2>Código Generado <span class="badge">{num_lines} líneas</span></h2>
+<div class="code-block">{code_escaped}</div>
 <a class="download" href="{cpp_filename}" download>Descargar {cpp_filename}</a>
-
 <footer>PitCode Compiler &middot; Compiladores 2026 &middot; Fase II</footer></body></html>"""
     with open(os.path.join(REPORTS_DIR, "reporte_codigo.html"), "w", encoding="utf-8") as f:
         f.write(html)
